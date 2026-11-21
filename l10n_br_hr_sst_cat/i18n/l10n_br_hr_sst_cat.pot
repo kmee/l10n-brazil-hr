@@ -843,12 +843,6 @@ msgid "Rascunho"
 msgstr ""
 
 #. module: l10n_br_hr_sst_cat
-#: model:ir.model.fields,field_description:l10n_br_hr_sst_cat.field_l10n_br_sst_acidente__rating_ids
-#: model:ir.model.fields,field_description:l10n_br_hr_sst_cat.field_l10n_br_sst_cat__rating_ids
-msgid "Ratings"
-msgstr ""
-
-#. module: l10n_br_hr_sst_cat
 #: model:ir.model.fields,field_description:l10n_br_hr_sst_cat.field_l10n_br_sst_cat__nr_rec_cat_orig
 msgid "Recibo da CAT de Origem"
 msgstr ""
