@@ -985,12 +985,6 @@ msgid "Rascunho"
 msgstr ""
 
 #. module: l10n_br_hr_sst
-#: model:ir.model.fields,field_description:l10n_br_hr_sst.field_l10n_br_sst_laudo__rating_ids
-#: model:ir.model.fields,field_description:l10n_br_hr_sst.field_l10n_br_sst_risco__rating_ids
-msgid "Ratings"
-msgstr ""
-
-#. module: l10n_br_hr_sst
 #: model:ir.model.fields,field_description:l10n_br_hr_sst.field_l10n_br_sst_laudo__activity_user_id
 msgid "Responsible User"
 msgstr ""
