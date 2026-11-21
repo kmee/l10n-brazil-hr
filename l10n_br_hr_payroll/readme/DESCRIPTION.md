@@ -1,4 +1,4 @@
-Folha de Pagamento Brasileira para Odoo 16.0.
+Folha de pagamento brasileira.
 
 Implementa os cálculos de:
 
