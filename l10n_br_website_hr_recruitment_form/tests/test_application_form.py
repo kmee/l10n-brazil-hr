@@ -54,7 +54,7 @@ class TestApplicationForm(HttpCase):
     def _form_url(self, applicant, token="default"):
         if token == "default":
             token = applicant.access_token
-        return "/application/%d/form?access_token=%s" % (applicant.id, token or "")
+        return f"/application/{applicant.id}/form?access_token={token or ''}"
 
     def _submit(self, applicant, token="default", **params):
         if token == "default":
@@ -62,7 +62,7 @@ class TestApplicationForm(HttpCase):
         if token is not None:
             params["access_token"] = token
         response = self.url_open(
-            "/application/%d/form/submit" % applicant.id,
+            f"/application/{applicant.id}/form/submit",
             data=json.dumps({"jsonrpc": "2.0", "method": "call", "params": params}),
             headers={"Content-Type": "application/json"},
         )
@@ -94,10 +94,9 @@ class TestApplicationForm(HttpCase):
         Then it points to /application/<id>/form with the access token
         """
         base = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
-        expected = "%s/application/%d/form?access_token=%s" % (
-            base,
-            self.applicant.id,
-            self.applicant.access_token,
+        expected = (
+            f"{base}/application/{self.applicant.id}/form"
+            f"?access_token={self.applicant.access_token}"
         )
         self.assertEqual(self.applicant.form_url, expected)
         self.assertEqual(self.applicant.get_share_url(), expected)
@@ -125,7 +124,7 @@ class TestApplicationForm(HttpCase):
         email = send_email.call_args.args[0]
         self.assertIn("maria@example.com", email["To"])
         body = email.get_body().get_content()
-        self.assertIn("/application/%d/form?access_token=" % self.applicant.id, body)
+        self.assertIn(f"/application/{self.applicant.id}/form?access_token=", body)
         self.assertIn(self.applicant.access_token, body)
         message = self.applicant.message_ids[:1]
         self.assertEqual(message.subject, "Applicant Form")
