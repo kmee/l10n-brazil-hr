@@ -3903,11 +3903,6 @@ msgid "Rascunho"
 msgstr ""
 
 #. module: l10n_br_esocial
-#: model:ir.model.fields,field_description:l10n_br_esocial.field_l10n_br_esocial_evento__rating_ids
-msgid "Ratings"
-msgstr ""
-
-#. module: l10n_br_esocial
 #: model_terms:ir.ui.view,arch_db:l10n_br_esocial.view_esocial_s1298_form
 msgid "Reabrir Competência"
 msgstr ""
