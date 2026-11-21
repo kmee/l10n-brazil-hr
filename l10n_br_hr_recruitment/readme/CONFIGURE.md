@@ -1,1 +1,1 @@
-This module does not require any special configuration.
+O módulo não precisa de configuração.

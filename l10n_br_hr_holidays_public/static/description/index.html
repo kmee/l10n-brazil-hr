@@ -370,8 +370,13 @@ ul.auto-toc {
 !! source digest: sha256:d9516a1ffb0ae5e519c28c5da5e02ba563d0a250b19a333f101dd93ae7b66bee
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/licence-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/kmee/l10n-brazil-hr/tree/16.0/l10n_br_hr_holidays_public"><img alt="kmee/l10n-brazil-hr" src="https://img.shields.io/badge/github-kmee%2Fl10n--brazil--hr-lightgray.png?logo=github" /></a></p>
-<p>Implementa a integração entre os holidays public e o resource calendar
-brasileiro</p>
+<p>Importação dos feriados brasileiros para o calendário de feriados
+públicos da OCA (<tt class="docutils literal">hr_holidays_public</tt>).</p>
+<p>O assistente gera os feriados de um intervalo de anos a partir das datas
+do <tt class="docutils literal">l10n_br_resource</tt>: os nacionais sempre, os estaduais quando o
+estado é informado e os municipais quando a cidade é informada. Esses
+feriados são os que a apuração do ponto e o multiplicador de horas
+extras usam.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
