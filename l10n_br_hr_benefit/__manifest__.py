@@ -6,7 +6,7 @@
     "version": "17.0.1.0.0",
     "license": "AGPL-3",
     "author": "KMEE, Odoo Community Association (OCA)",
-    "website": "https://github.com/KMEE/kmee-odoo-addons",
+    "website": "https://github.com/kmee/l10n-brazil-hr",
     "category": "Human Resources",
     "depends": [
         "payroll_contract_advantages",
