@@ -22,7 +22,7 @@ Folha de Pagamento Brasileira
 
 |badge1| |badge2| |badge3|
 
-Folha de Pagamento Brasileira para Odoo 16.0.
+Folha de pagamento brasileira.
 
 Implementa os cálculos de:
 
@@ -121,6 +121,13 @@ Authors
 -------
 
 * KMEE
+
+Contributors
+------------
+
+- `KMEE <https://www.kmee.com.br>`__:
+
+  - Luis Felipe Mileo <mileo@kmee.com.br>
 
 Maintainers
 -----------

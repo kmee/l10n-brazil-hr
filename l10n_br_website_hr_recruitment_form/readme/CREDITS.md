@@ -1,4 +1,3 @@
-The development of this module has been financially supported by:
+O desenvolvimento deste módulo foi financiado por:
 
 - [KMEE](https://kmee.com.br/)
-
