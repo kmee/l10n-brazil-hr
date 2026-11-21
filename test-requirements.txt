@@ -1,0 +1,5 @@
+odoo-test-helper
+# esociallib requires xsdata[lxml], and xsdata 26.2+ requires lxml>=5, which
+# dropped lxml.html.clean (imported by Odoo): pip then upgrades the lxml of the
+# oca-ci image and odoo no longer imports. Same lxml as kmee/kmee-odoo-addons.
+lxml<5
