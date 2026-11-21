@@ -160,10 +160,12 @@ class TestEncargosContabilizacao(PayrollCommon):
 
     def test_slot_escolhe_conta_especifica_quando_existe(self):
         """Com conta própria do tributo no plano, o slot a encontra."""
+        # A busca é por código: o código começa com 0 para vir antes da conta
+        # de FGTS que o plano de contas brasileiro já traga.
         conta_fgts = self.env["account.account"].create(
             {
                 "name": "FGTS a Recolher",
-                "code": "TST2199",
+                "code": "0TST2199",
                 "account_type": "liability_current",
                 "company_id": self.company.id,
             }
