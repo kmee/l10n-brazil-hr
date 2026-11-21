@@ -10,6 +10,7 @@ Cobertura:
   - Rescisão com 13º proporcional
   - Líquido positivo em todos os tipos
 """
+
 import calendar
 from datetime import date
 

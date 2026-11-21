@@ -10,6 +10,7 @@ Cobertura:
   - Aprendiz (alíquota especial)
   - FGTS CLT 8%, aprendiz 2%, RPPS 0%
 """
+
 from .common import PayrollCommon
 
 

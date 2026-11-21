@@ -9,6 +9,7 @@ tabelas fiscais vigentes lidas do banco), não apenas repetindo a fórmula da
 regra XML. Isso valida que a regra usa a variável/condição corretas - não
 só que a função pura está certa (essa é coberta em outro lugar).
 """
+
 from datetime import date
 
 from dateutil.relativedelta import relativedelta

@@ -125,11 +125,14 @@ class TestTotalizadores(ESocialCicloCommon):
                 )
             ],
         )
-        with mock.patch.object(
-            type(lote), "_get_certificate", return_value=(b"pfx", "senha")
-        ), mock.patch(
-            "odoo.addons.l10n_br_esocial.models.esocial_lote.consultar_lote",
-            return_value=resultado,
+        with (
+            mock.patch.object(
+                type(lote), "_get_certificate", return_value=(b"pfx", "senha")
+            ),
+            mock.patch(
+                "odoo.addons.l10n_br_esocial.models.esocial_lote.consultar_lote",
+                return_value=resultado,
+            ),
         ):
             lote.action_consultar()
         self.assertEqual(evento.state, "success")

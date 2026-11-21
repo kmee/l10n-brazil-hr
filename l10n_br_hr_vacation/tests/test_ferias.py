@@ -11,6 +11,7 @@ Cobertura:
     sem INSS e sem FGTS
   - Apuração do IRRF de férias em separado (IN RFB 1.500/2014, art. 29, § 1º)
 """
+
 from datetime import date
 
 from odoo.tests import tagged

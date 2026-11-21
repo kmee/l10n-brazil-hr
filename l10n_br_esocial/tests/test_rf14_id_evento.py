@@ -131,10 +131,13 @@ class TestRF14IdEvento(TransactionCase):
                 )
             ]
         )
-        with mock.patch(
-            "odoo.addons.l10n_br_esocial.models.esocial_lote.consultar_lote",
-            return_value=fake,
-        ), mock.patch.object(type(lote), "_get_certificate", return_value=(b"", "")):
+        with (
+            mock.patch(
+                "odoo.addons.l10n_br_esocial.models.esocial_lote.consultar_lote",
+                return_value=fake,
+            ),
+            mock.patch.object(type(lote), "_get_certificate", return_value=(b"", "")),
+        ):
             lote.action_consultar()
 
         self.assertEqual(evento.state, "success")
@@ -166,10 +169,13 @@ class TestRF14IdEvento(TransactionCase):
                 )
             ]
         )
-        with mock.patch(
-            "odoo.addons.l10n_br_esocial.models.esocial_lote.consultar_lote",
-            return_value=fake,
-        ), mock.patch.object(type(lote), "_get_certificate", return_value=(b"", "")):
+        with (
+            mock.patch(
+                "odoo.addons.l10n_br_esocial.models.esocial_lote.consultar_lote",
+                return_value=fake,
+            ),
+            mock.patch.object(type(lote), "_get_certificate", return_value=(b"", "")),
+        ):
             lote.action_consultar()
 
         self.assertEqual(evento.state, "error")
@@ -195,10 +201,13 @@ class TestRF14IdEvento(TransactionCase):
         fake = _FakeLoteResult(
             eventos=[_FakeEventoResult(event_id="ID-DIFERENTE", aceito=True)]
         )
-        with mock.patch(
-            "odoo.addons.l10n_br_esocial.models.esocial_lote.consultar_lote",
-            return_value=fake,
-        ), mock.patch.object(type(lote), "_get_certificate", return_value=(b"", "")):
+        with (
+            mock.patch(
+                "odoo.addons.l10n_br_esocial.models.esocial_lote.consultar_lote",
+                return_value=fake,
+            ),
+            mock.patch.object(type(lote), "_get_certificate", return_value=(b"", "")),
+        ):
             lote.action_consultar()
 
         self.assertEqual(evento.state, "sent")

@@ -10,6 +10,7 @@ Cobertura:
   - Atestado médico exige comprovante
   - Licença-maternidade com limite de dias
 """
+
 from odoo.tests.common import TransactionCase
 
 

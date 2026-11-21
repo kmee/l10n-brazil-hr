@@ -9,6 +9,7 @@ Cobertura:
   - Sem ressarcimento não gera linha contábil
   - Cancelamento remove lançamento
 """
+
 from datetime import date
 
 from odoo.addons.l10n_br_hr_payroll.tests.common import PayrollCommon

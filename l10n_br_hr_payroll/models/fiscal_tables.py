@@ -13,6 +13,7 @@ Os valores são carregados de ``data/*.csv`` e têm como fonte as tabelas de
 referência do eSocial (``l10n_br_esocial``). Este módulo NÃO depende do
 eSocial: a dependência real é a inversa.
 """
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import format_date

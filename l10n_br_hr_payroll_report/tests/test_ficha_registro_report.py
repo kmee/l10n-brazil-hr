@@ -8,6 +8,7 @@ Cobertura:
   - Relatório renderiza sem erro
   - Conteúdo HTML contém dados do empregado
 """
+
 from odoo.addons.l10n_br_hr_payroll.tests.common import PayrollCommon
 
 

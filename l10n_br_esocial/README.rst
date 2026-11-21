@@ -16,9 +16,9 @@ eSocial - Integração com o Governo Federal
 .. |badge2| image:: https://img.shields.io/badge/licence-AGPL--3-blue.png
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
-.. |badge3| image:: https://img.shields.io/badge/github-KMEE%2Fkmee--odoo--addons-lightgray.png?logo=github
-    :target: https://github.com/KMEE/kmee-odoo-addons/tree/18.0/l10n_br_esocial
-    :alt: KMEE/kmee-odoo-addons
+.. |badge3| image:: https://img.shields.io/badge/github-kmee%2Fl10n--brazil--hr-lightgray.png?logo=github
+    :target: https://github.com/kmee/l10n-brazil-hr/tree/18.0/l10n_br_esocial
+    :alt: kmee/l10n-brazil-hr
 
 |badge1| |badge2| |badge3|
 
@@ -27,18 +27,20 @@ trabalhistas ao governo federal brasileiro.
 
 Inclui:
 
-* Tabelas de referência oficiais (natureza rubrica, categoria trabalhador, etc.)
-* Extensões em regras salariais, empregado, contrato e empresa
-* Gestão de eventos e lotes com máquina de estados
-* Preparação para transmissão via esociallib
-* Ciclo mínimo até a DCTFWeb: S-1005 (estabelecimento, RAT e FAP), S-1020
-  (lotação, FPAS e terceiros), S-1200 (remuneração), S-1210 (pagamentos em
-  regime de caixa), S-1299/S-1298 (fechamento e reabertura) e S-3000
-  (exclusão de eventos)
-* Leitura dos totalizadores devolvidos pelo governo (S-5001, S-5002, S-5003,
-  S-5011, S-5012 e S-5013) e conferência da competência contra a folha
-* Acesso restrito ao pessoal de folha e regra multiempresa nos eventos, que
-  carregam CPF e remuneração dos trabalhadores
+- Tabelas de referência oficiais (natureza rubrica, categoria
+  trabalhador, etc.)
+- Extensões em regras salariais, empregado, contrato e empresa
+- Gestão de eventos e lotes com máquina de estados
+- Preparação para transmissão via esociallib
+- Ciclo mínimo até a DCTFWeb: S-1005 (estabelecimento, RAT e FAP),
+  S-1020 (lotação, FPAS e terceiros), S-1200 (remuneração), S-1210
+  (pagamentos em regime de caixa), S-1299/S-1298 (fechamento e
+  reabertura) e S-3000 (exclusão de eventos)
+- Leitura dos totalizadores devolvidos pelo governo (S-5001, S-5002,
+  S-5003, S-5011, S-5012 e S-5013) e conferência da competência contra a
+  folha
+- Acesso restrito ao pessoal de folha e regra multiempresa nos eventos,
+  que carregam CPF e remuneração dos trabalhadores
 
 **Table of contents**
 
@@ -50,23 +52,24 @@ Usage
 
 Ciclo de uma competência:
 
-#. Cadastre o estabelecimento (S-1005) e as lotações (S-1020) e transmita-os.
-#. Gere o S-1200 dos holerites confirmados.
-#. Informe a **Data de Pagamento** nos holerites pagos e use a ação **Gerar
-   S-1210** (o evento é por regime de caixa).
-#. Aguarde o aceite de todos os eventos periódicos: o fechamento é bloqueado
-   enquanto houver evento da competência sem aceite.
-#. Gere o S-1299. Para corrigir uma competência fechada, transmita antes a
-   reabertura (S-1298).
-#. Evento aceito por engano é desfeito com o S-3000.
+1. Cadastre o estabelecimento (S-1005) e as lotações (S-1020) e
+   transmita-os.
+2. Gere o S-1200 dos holerites confirmados.
+3. Informe a **Data de Pagamento** nos holerites pagos e use a ação
+   **Gerar S-1210** (o evento é por regime de caixa).
+4. Aguarde o aceite de todos os eventos periódicos: o fechamento é
+   bloqueado enquanto houver evento da competência sem aceite.
+5. Gere o S-1299. Para corrigir uma competência fechada, transmita antes
+   a reabertura (S-1298).
+6. Evento aceito por engano é desfeito com o S-3000.
 
 Bug Tracker
 ===========
 
-Bugs are tracked on `GitHub Issues <https://github.com/KMEE/kmee-odoo-addons/issues>`_.
+Bugs are tracked on `GitHub Issues <https://github.com/kmee/l10n-brazil-hr/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-`feedback <https://github.com/KMEE/kmee-odoo-addons/issues/new?body=module:%20l10n_br_esocial%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/kmee/l10n-brazil-hr/issues/new?body=module:%20l10n_br_esocial%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -74,13 +77,13 @@ Credits
 =======
 
 Authors
-~~~~~~~
+-------
 
 * KMEE
 
 Maintainers
-~~~~~~~~~~~
+-----------
 
-This module is part of the `KMEE/kmee-odoo-addons <https://github.com/KMEE/kmee-odoo-addons/tree/18.0/l10n_br_esocial>`_ project on GitHub.
+This module is part of the `kmee/l10n-brazil-hr <https://github.com/kmee/l10n-brazil-hr/tree/18.0/l10n_br_esocial>`_ project on GitHub.
 
 You are welcome to contribute.

@@ -10,6 +10,7 @@ Cobertura:
   - Plano de Saúde dedutível do IRRF
   - Integração benefícios × folha
 """
+
 from datetime import date
 
 from odoo.addons.l10n_br_hr_payroll.tests.common import PayrollCommon

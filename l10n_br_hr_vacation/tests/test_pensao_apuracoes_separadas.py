@@ -26,6 +26,7 @@ Regra fiscal validada aqui (documentada no cabeçalho de
 Competências usadas: 2024 (tabela IRRF vigente de 02/2024 a 04/2025, isenção
 até R$2.259,20 e desconto simplificado de R$564,80 = 25% da isenção).
 """
+
 from datetime import date
 
 from odoo.tests import tagged

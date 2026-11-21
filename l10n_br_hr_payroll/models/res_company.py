@@ -31,6 +31,7 @@ O regime tributário em si NÃO é redefinido aqui: é o ``tax_framework`` do
 fiscal e pelo custo de estoque), complementado por ``profit_calculation``
 (real/presumido). Deste módulo saem apenas os dados que só a folha usa.
 """
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 

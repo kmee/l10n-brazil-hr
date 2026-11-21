@@ -3,6 +3,7 @@
 """
 Classe base com fixtures para testes de férias e 13º salário.
 """
+
 from odoo.addons.l10n_br_hr_payroll.tests.common import PayrollCommon
 
 

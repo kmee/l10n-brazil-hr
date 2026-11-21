@@ -9,6 +9,7 @@ Cobertura:
   - WORK100 code presente após compute_sheet
   - worked_days acessível nas regras salariais
 """
+
 from .common import PayrollCommon
 
 

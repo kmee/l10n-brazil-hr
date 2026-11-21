@@ -369,31 +369,33 @@ ul.auto-toc {
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! source digest: sha256:415620d98721fa7e96e050a2158c5a06b46273add4a106d9bc49e2f527647f97
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
-<p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/licence-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/KMEE/kmee-odoo-addons/tree/18.0/l10n_br_hr_payroll_sst"><img alt="KMEE/kmee-odoo-addons" src="https://img.shields.io/badge/github-KMEE%2Fkmee--odoo--addons-lightgray.png?logo=github" /></a></p>
+<p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/licence-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/kmee/l10n-brazil-hr/tree/18.0/l10n_br_hr_payroll_sst"><img alt="kmee/l10n-brazil-hr" src="https://img.shields.io/badge/github-kmee%2Fl10n--brazil--hr-lightgray.png?logo=github" /></a></p>
 <p>Ponte entre o inventário de riscos e a folha de pagamento.</p>
 <ul class="simple">
-<li><strong>Insalubridade e periculosidade derivadas do laudo.</strong> Os campos do contrato
-passam a ser calculados a partir do fator de risco vigente do ambiente,
-filtrado pela função, mas continuam editáveis: convenção coletiva e decisão
-judicial podem obrigar a pagar o que o laudo não aponta. Quando contrato e
-laudo divergem, a divergência fica visível no contrato, com campo para a
-justificativa. Prevalece o grau mais gravoso quando há vários riscos.</li>
-<li><strong>Insalubridade ou periculosidade, nunca as duas</strong> (CLT, art. 193, par. 2, e
-TST IRR Tema 17). Quando o laudo aponta as duas, vale a opção do empregado,
-registrada e datada no contrato; sem opção, a folha paga a de maior valor
-(percentual do grau sobre o salário mínimo x 30% do salário-base). Pagar só
-uma das duas não aparece como divergência.</li>
-<li><strong>GILRAT adicional (aposentadoria especial).</strong> Regra salarial patronal com a
-alíquota da Tabela 02 do eSocial, 12% para 15 anos, 9% para 20 anos e 6% para
-25 anos de exposição, cheia e sem FAP, pelos riscos vigentes no período do
-holerite. Só gera o adicional quem a lei manda: empregado (categorias 1xx),
-avulso (2xx) e cooperado de cooperativa de produção (738); contribuinte
-individual sem cooperativa, não. A regra entra na estrutura CLT e aparece no
-holerite como encargo.</li>
+<li><strong>Insalubridade e periculosidade derivadas do laudo.</strong> Os campos do
+contrato passam a ser calculados a partir do fator de risco vigente do
+ambiente, filtrado pela função, mas continuam editáveis: convenção
+coletiva e decisão judicial podem obrigar a pagar o que o laudo não
+aponta. Quando contrato e laudo divergem, a divergência fica visível
+no contrato, com campo para a justificativa. Prevalece o grau mais
+gravoso quando há vários riscos.</li>
+<li><strong>Insalubridade ou periculosidade, nunca as duas</strong> (CLT, art. 193,
+par. 2, e TST IRR Tema 17). Quando o laudo aponta as duas, vale a
+opção do empregado, registrada e datada no contrato; sem opção, a
+folha paga a de maior valor (percentual do grau sobre o salário mínimo
+x 30% do salário-base). Pagar só uma das duas não aparece como
+divergência.</li>
+<li><strong>GILRAT adicional (aposentadoria especial).</strong> Regra salarial patronal
+com a alíquota da Tabela 02 do eSocial, 12% para 15 anos, 9% para 20
+anos e 6% para 25 anos de exposição, cheia e sem FAP, pelos riscos
+vigentes no período do holerite. Só gera o adicional quem a lei manda:
+empregado (categorias 1xx), avulso (2xx) e cooperado de cooperativa de
+produção (738); contribuinte individual sem cooperativa, não. A regra
+entra na estrutura CLT e aparece no holerite como encargo.</li>
 </ul>
-<p>Contrato sem ambiente de trabalho informado mantém o que já estava marcado: quem
-ainda não implantou o inventário de riscos não pode perder o adicional que já
-pagava por causa da instalação do módulo.</p>
+<p>Contrato sem ambiente de trabalho informado mantém o que já estava
+marcado: quem ainda não implantou o inventário de riscos não pode perder
+o adicional que já pagava por causa da instalação do módulo.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
@@ -408,10 +410,10 @@ pagava por causa da instalação do módulo.</p>
 </div>
 <div class="section" id="bug-tracker">
 <h1><a class="toc-backref" href="#toc-entry-1">Bug Tracker</a></h1>
-<p>Bugs are tracked on <a class="reference external" href="https://github.com/KMEE/kmee-odoo-addons/issues">GitHub Issues</a>.
+<p>Bugs are tracked on <a class="reference external" href="https://github.com/kmee/l10n-brazil-hr/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-<a class="reference external" href="https://github.com/KMEE/kmee-odoo-addons/issues/new?body=module:%20l10n_br_hr_payroll_sst%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**">feedback</a>.</p>
+<a class="reference external" href="https://github.com/kmee/l10n-brazil-hr/issues/new?body=module:%20l10n_br_hr_payroll_sst%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**">feedback</a>.</p>
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
@@ -433,7 +435,7 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 </div>
 <div class="section" id="maintainers">
 <h2><a class="toc-backref" href="#toc-entry-5">Maintainers</a></h2>
-<p>This module is part of the <a class="reference external" href="https://github.com/KMEE/kmee-odoo-addons/tree/18.0/l10n_br_hr_payroll_sst">KMEE/kmee-odoo-addons</a> project on GitHub.</p>
+<p>This module is part of the <a class="reference external" href="https://github.com/kmee/l10n-brazil-hr/tree/18.0/l10n_br_hr_payroll_sst">kmee/l10n-brazil-hr</a> project on GitHub.</p>
 <p>You are welcome to contribute.</p>
 </div>
 </div>

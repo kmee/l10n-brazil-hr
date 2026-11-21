@@ -293,7 +293,7 @@ def _detecta_lacunas(nsrs):
     no fechamento, não apenas um aviso na importação.
     """
     lacunas = []
-    for anterior, seguinte in zip(nsrs, nsrs[1:]):
+    for anterior, seguinte in zip(nsrs, nsrs[1:], strict=False):
         if seguinte > anterior + 1:
             lacunas.append((anterior + 1, seguinte - 1))
     return lacunas

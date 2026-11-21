@@ -6,6 +6,7 @@ Testes unitários puros dos encargos patronais e das provisões (RF-31 a RF-34).
 Sem ORM: exercitam diretamente as funções de ``salary_rules_br`` que decidem
 QUAIS encargos são devidos em cada regime tributário e quanto vale a provisão.
 """
+
 from odoo.tests.common import BaseCase
 
 from odoo.addons.l10n_br_hr_payroll.models.salary_rules_br import (

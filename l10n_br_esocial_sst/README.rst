@@ -16,33 +16,37 @@ eSocial - Eventos de SST
 .. |badge2| image:: https://img.shields.io/badge/licence-AGPL--3-blue.png
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
-.. |badge3| image:: https://img.shields.io/badge/github-KMEE%2Fkmee--odoo--addons-lightgray.png?logo=github
-    :target: https://github.com/KMEE/kmee-odoo-addons/tree/18.0/l10n_br_esocial_sst
-    :alt: KMEE/kmee-odoo-addons
+.. |badge3| image:: https://img.shields.io/badge/github-kmee%2Fl10n--brazil--hr-lightgray.png?logo=github
+    :target: https://github.com/kmee/l10n-brazil-hr/tree/18.0/l10n_br_esocial_sst
+    :alt: kmee/l10n-brazil-hr
 
 |badge1| |badge2| |badge3|
 
 Eventos de Saúde e Segurança do Trabalho do eSocial (leiaute S-1.3).
 
-Os intermediários seguem o padrão do ``l10n_br_esocial`` e reaproveitam o ciclo
-de transmissão e de retorno já existente, inclusive o casamento do recibo pelo
-``id_evento``.
+Os intermediários seguem o padrão do ``l10n_br_esocial`` e reaproveitam
+o ciclo de transmissão e de retorno já existente, inclusive o casamento
+do recibo pelo ``id_evento``.
 
-* **S-2210** - Comunicação de Acidente de Trabalho, gerada a partir da CAT.
-* **S-2220** - Monitoramento da Saúde do Trabalhador, gerado ao concluir o ASO,
-  com os exames complementares da Tabela 27 e o médico coordenador do PCMSO.
-* **S-2221** - Exame Toxicológico do Motorista Profissional (Lei 13.103/2015).
-* **S-2240** - Condições Ambientais do Trabalho, com o grupo ``epiEpc``
-  alimentado pela ficha de EPI e pelo Certificado de Aprovação, e **geração em
-  massa** a partir do laudo: alterar o PGR ou o LTCAT de um ambiente gera o
-  evento de todos os trabalhadores atingidos, com a mesma data de início.
+- **S-2210** - Comunicação de Acidente de Trabalho, gerada a partir da
+  CAT.
+- **S-2220** - Monitoramento da Saúde do Trabalhador, gerado ao concluir
+  o ASO, com os exames complementares da Tabela 27 e o médico
+  coordenador do PCMSO.
+- **S-2221** - Exame Toxicológico do Motorista Profissional (Lei
+  13.103/2015).
+- **S-2240** - Condições Ambientais do Trabalho, com o grupo ``epiEpc``
+  alimentado pela ficha de EPI e pelo Certificado de Aprovação, e
+  **geração em massa** a partir do laudo: alterar o PGR ou o LTCAT de um
+  ambiente gera o evento de todos os trabalhadores atingidos, com a
+  mesma data de início.
 
-**Validações antes do envio.** As regras que o eSocial só aponta na rejeição
-rodam localmente: uso de EPI declarado sem entrega válida com CA, EPC ou EPI
-implementado sem indicação de eficácia, ausência de agente nocivo convivendo com
-proteção declarada ou com outros fatores de risco, e CAT de reabertura ou de
-óbito sem o recibo da comunicação anterior. Descobrir isso no retorno custaria o
-prazo legal.
+**Validações antes do envio.** As regras que o eSocial só aponta na
+rejeição rodam localmente: uso de EPI declarado sem entrega válida com
+CA, EPC ou EPI implementado sem indicação de eficácia, ausência de
+agente nocivo convivendo com proteção declarada ou com outros fatores de
+risco, e CAT de reabertura ou de óbito sem o recibo da comunicação
+anterior. Descobrir isso no retorno custaria o prazo legal.
 
 **Table of contents**
 
@@ -52,10 +56,10 @@ prazo legal.
 Bug Tracker
 ===========
 
-Bugs are tracked on `GitHub Issues <https://github.com/KMEE/kmee-odoo-addons/issues>`_.
+Bugs are tracked on `GitHub Issues <https://github.com/kmee/l10n-brazil-hr/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-`feedback <https://github.com/KMEE/kmee-odoo-addons/issues/new?body=module:%20l10n_br_esocial_sst%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/kmee/l10n-brazil-hr/issues/new?body=module:%20l10n_br_esocial_sst%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -63,20 +67,20 @@ Credits
 =======
 
 Authors
-~~~~~~~
+-------
 
 * KMEE
 
 Contributors
-~~~~~~~~~~~~
+------------
 
-* `KMEE <https://www.kmee.com.br>`_:
+- `KMEE <https://www.kmee.com.br>`__:
 
-  * Luis Felipe Mileo <mileo@kmee.com.br>
+  - Luis Felipe Mileo <mileo@kmee.com.br>
 
 Maintainers
-~~~~~~~~~~~
+-----------
 
-This module is part of the `KMEE/kmee-odoo-addons <https://github.com/KMEE/kmee-odoo-addons/tree/18.0/l10n_br_esocial_sst>`_ project on GitHub.
+This module is part of the `kmee/l10n-brazil-hr <https://github.com/kmee/l10n-brazil-hr/tree/18.0/l10n_br_esocial_sst>`_ project on GitHub.
 
 You are welcome to contribute.

@@ -9,6 +9,7 @@ Cobertura:
   - Datas válidas (date_from <= date_to)
   - Linhas obrigatórias antes de confirmar
 """
+
 from datetime import date
 
 from odoo.exceptions import ValidationError

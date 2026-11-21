@@ -14,6 +14,7 @@ Cobertura:
   - a resolução de conta por slot escolhe a conta específica do tributo quando o
     plano de contas tem uma, e cai na conta genérica quando não tem.
 """
+
 from datetime import date
 
 from odoo.addons.l10n_br_hr_payroll.tests.common import PayrollCommon

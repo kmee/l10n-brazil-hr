@@ -9,6 +9,7 @@ Cobertura:
   - Férias proporcionais + 1/3 (indenizatórias: isentas de INSS/IRRF/FGTS)
   - Composição do NET
 """
+
 from datetime import date
 
 from odoo.tests import tagged

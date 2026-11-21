@@ -6,6 +6,7 @@ Testes de resolução das tabelas fiscais por competência (RF-01/RF-02).
 Provam que a folha usa a tabela vigente na competência do holerite e NÃO
 cai silenciosamente em 2024, e que levanta UserError quando não há tabela.
 """
+
 from datetime import date
 
 from odoo.exceptions import UserError

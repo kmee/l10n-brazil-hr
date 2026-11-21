@@ -10,6 +10,7 @@ Cobertura:
   - Débito em conta de despesa e crédito em passivo
   - Reversão de lançamento ao reabrir folha
 """
+
 from datetime import date
 
 from odoo.addons.l10n_br_hr_payroll.tests.common import PayrollCommon

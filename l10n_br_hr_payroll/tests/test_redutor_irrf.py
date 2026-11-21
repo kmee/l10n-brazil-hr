@@ -16,6 +16,7 @@ Pontos que estes testes travam (cada um já foi erro real de implementação):
   - Acima de R$ 7.350 o corte é seco.
   - Competências anteriores a 01/2026 continuam SEM redutor.
 """
+
 from datetime import date
 
 from odoo.tests import tagged

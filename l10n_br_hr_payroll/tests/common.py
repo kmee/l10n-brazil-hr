@@ -3,6 +3,7 @@
 """
 Classe base com fixtures compartilhadas por todos os testes ORM de folha.
 """
+
 from datetime import date
 
 from odoo.tests.common import TransactionCase

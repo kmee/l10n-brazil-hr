@@ -9,6 +9,7 @@ Cobertura:
   - Contribuição sindical (percentual, fixo, um dia)
   - Vínculo sindicato ↔ contrato (via OCA partner_union)
 """
+
 from datetime import date
 
 from odoo.tests.common import TransactionCase

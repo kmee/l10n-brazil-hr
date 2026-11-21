@@ -10,6 +10,7 @@ Cobertura:
   - Workflow de estados
   - Departamento computado do titular
 """
+
 from datetime import date
 
 from odoo.exceptions import ValidationError

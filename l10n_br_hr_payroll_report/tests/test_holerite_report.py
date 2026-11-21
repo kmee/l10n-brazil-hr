@@ -8,6 +8,7 @@ Cobertura:
   - Relatório renderiza sem erro para payslip computado
   - Seções do holerite (proventos, descontos, líquido)
 """
+
 from datetime import date
 
 from odoo.addons.l10n_br_hr_payroll.tests.common import PayrollCommon

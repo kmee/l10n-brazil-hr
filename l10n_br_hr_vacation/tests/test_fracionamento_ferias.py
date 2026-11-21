@@ -10,6 +10,7 @@ fracionadas em até 3 períodos, um deles com pelo menos 14 dias corridos e
 os demais com pelo menos 5 dias corridos cada. O holerite de férias paga
 os dias DO PERÍODO efetivamente gozado nesta fração, não o saldo inteiro.
 """
+
 import calendar
 from datetime import date
 

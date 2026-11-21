@@ -4,6 +4,7 @@
 Testes do redutor do IRPF (Lei 15.270/2025) no 13º e na rescisão, e da regra
 dos 15 dias no mês do desligamento (Lei 4.090/62 art. 1º §2º e art. 3º).
 """
+
 from datetime import date
 
 from odoo.tests import tagged

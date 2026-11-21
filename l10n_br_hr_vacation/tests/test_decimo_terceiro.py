@@ -9,6 +9,7 @@ Cobertura:
   - 2ª parcela (integral - 1ª parcela, com INSS/IRRF)
   - 13º na rescisão
 """
+
 from datetime import date
 
 from odoo.tests import tagged

@@ -10,6 +10,7 @@ confirmados anteriores. O divisor da hora extra é derivado da jornada do
 contrato (RF-26); os testes leem `contract._l10n_br_divisor_horas_mensais()`
 em vez de fixar 220, para não depender do calendário padrão do ambiente.
 """
+
 from datetime import date
 
 from dateutil.relativedelta import relativedelta

@@ -8,6 +8,7 @@ independentemente com pytest puro (sem banco de dados).
 
 Injetadas no contexto das regras salariais via `tools.br.*`.
 """
+
 from decimal import ROUND_HALF_UP, Decimal
 
 from dateutil.relativedelta import relativedelta

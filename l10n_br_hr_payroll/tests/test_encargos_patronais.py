@@ -14,6 +14,7 @@ Provam, no holerite calculado de verdade, que:
 Todos usam o mesmo salário de R$ 6.000,00 e a competência 03/2026, de modo que
 os valores sejam conferíveis à mão (ver a tabela no README do módulo).
 """
+
 from datetime import date
 
 from odoo.exceptions import UserError, ValidationError

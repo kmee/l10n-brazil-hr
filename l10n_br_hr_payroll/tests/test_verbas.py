@@ -14,6 +14,7 @@ Cobertura:
   - Faltas e DSR
   - FGTS integra hora extra
 """
+
 from datetime import date
 
 from odoo.exceptions import ValidationError
