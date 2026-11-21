@@ -3,7 +3,7 @@
 
 {
     "name": "Brazilian Localization HR Recruitment",
-    "summary": "Brazilian Localization HR Recruitment",
+    "summary": "Dados brasileiros do funcionário no candidato do recrutamento",
     "category": "Localization",
     "author": "KMEE, " "Odoo Community Association (OCA)",
     "website": "https://github.com/kmee/l10n-brazil-hr",

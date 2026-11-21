@@ -3,6 +3,7 @@
 
 {
     "name": "L10n Br HR Holidays Public",
+    "summary": "Importação dos feriados nacionais, estaduais e municipais brasileiros",
     "version": "16.0.1.0.0",
     "license": "AGPL-3",
     "author": "KMEE,Odoo Community Association (OCA)",
