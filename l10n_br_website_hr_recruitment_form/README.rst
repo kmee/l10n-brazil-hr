@@ -26,16 +26,13 @@ Brazilian Localization Website Hr Recruitment Form
 
 |badge1| |badge2| |badge3|
 
-This module expands Odoo's recruitment functionality, allowing
-candidates to share and fill personalized forms online. When a candidate
-is registered in the system, a unique access token is generated, which
-is used to generate a link to a specific application form. This link is
-sent to the candidate by email, and the form can be filled out on the
-website portal. Through this form, the candidate can provide data such
-as banking information, ethnicity, dependents and other details, which
-are automatically registered in the Odoo system, associating them with
-the candidate. The Odoo interface has also been changed to include a
-button that makes it easier to send the form link to the candidate.
+Formulário público para o candidato completar os próprios dados.
+
+Quando um candidato é cadastrado, o módulo gera um token de acesso único
+e, com ele, o link de um formulário no portal do site. O link é enviado
+ao candidato por e-mail (um botão na candidatura facilita o envio), e
+ele preenche dados como conta bancária, etnia e dependentes, que ficam
+gravados na candidatura.
 
 **Table of contents**
 
@@ -63,14 +60,14 @@ Authors
 Contributors
 ------------
 
-- ``KMEE <https://www.kmee.com.br>``\ \_:
+- `KMEE <https://www.kmee.com.br>`__:
 
   - Felipe Zago <felipe.zago@kmee.com.br>
 
 Other credits
 -------------
 
-The development of this module has been financially supported by:
+O desenvolvimento deste módulo foi financiado por:
 
 - `KMEE <https://kmee.com.br/>`__
 

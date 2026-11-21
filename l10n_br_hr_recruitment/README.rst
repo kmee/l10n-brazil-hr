@@ -26,9 +26,16 @@ Brazilian Localization HR Recruitment
 
 |badge1| |badge2| |badge3|
 
-This module implements the localization fields found on the employee on
-the applicant module, to garantee that employee created from the
-application has all information.
+Dados brasileiros do funcionário já no candidato (``hr.applicant``),
+para que o funcionário criado a partir da candidatura nasça com o
+cadastro completo.
+
+O candidato ganha os campos do ``l10n_br_hr``: data de nascimento,
+nacionalidade, etnia, filiação, CPF, RG, título de eleitor, certificado
+de reservista, PIS/PASEP, CNH e conta bancária. O funcionário ganha
+campos para guardar os arquivos dos documentos (RG, CNH, título de
+eleitor, reservista, comprovantes de endereço e de escolaridade, PIS), e
+o tipo de contrato ganha o regime.
 
 **Table of contents**
 
@@ -38,7 +45,7 @@ application has all information.
 Configuration
 =============
 
-This module does not require any special configuration.
+O módulo não precisa de configuração.
 
 Bug Tracker
 ===========
@@ -61,12 +68,14 @@ Authors
 Contributors
 ------------
 
-- Felipe Zago <felipe.zago@kmee.com.br>
+- `KMEE <https://www.kmee.com.br>`__:
+
+  - Felipe Zago <felipe.zago@kmee.com.br>
 
 Other credits
 -------------
 
-The development of this module has been financially supported by:
+O desenvolvimento deste módulo foi financiado por:
 
 - `KMEE <https://kmee.com.br/>`__
 
