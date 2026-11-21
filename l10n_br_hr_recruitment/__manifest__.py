@@ -5,7 +5,7 @@
     "name": "Brazilian Localization HR Recruitment",
     "summary": "Brazilian Localization HR Recruitment",
     "category": "Localization",
-    "author": "KMEE, " "Odoo Community Association (OCA)",
+    "author": "KMEE, Odoo Community Association (OCA)",
     "website": "https://github.com/kmee/l10n-brazil-hr",
     "version": "19.0.1.0.0",
     "depends": [

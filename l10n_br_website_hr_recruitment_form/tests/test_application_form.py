@@ -113,11 +113,13 @@ class TestApplicationForm(HttpCase):
         # patched on the registry class (no SMTP connection either), as the
         # core mail tests do
         mail_server_cls = type(self.env["ir.mail_server"])
-        with patch.object(
-            mail_server_cls, "_disable_send", lambda _: False
-        ), patch.object(mail_server_cls, "_connect__", return_value=None), patch.object(
-            mail_server_cls, "send_email", return_value="<msg-id>"
-        ) as send_email:
+        with (
+            patch.object(mail_server_cls, "_disable_send", lambda _: False),
+            patch.object(mail_server_cls, "_connect__", return_value=None),
+            patch.object(
+                mail_server_cls, "send_email", return_value="<msg-id>"
+            ) as send_email,
+        ):
             self.applicant.action_share_applicant_form()
         self.assertTrue(send_email.called)
         email = send_email.call_args.args[0]
