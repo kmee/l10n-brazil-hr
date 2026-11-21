@@ -3,7 +3,7 @@
 
 {
     "name": "Brazilian HR - Test Setup",
-    "summary": "Loads the Brazilian chart of accounts of the demo companies for the CI",
+    "summary": "Plano de contas brasileiro nas empresas de demonstração do CI",
     "version": "16.0.1.0.0",
     "category": "Localisation",
     "license": "AGPL-3",
