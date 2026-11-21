@@ -636,11 +636,6 @@ msgid "Rascunho"
 msgstr ""
 
 #. module: l10n_br_hr_sst_aso
-#: model:ir.model.fields,field_description:l10n_br_hr_sst_aso.field_l10n_br_sst_pcmso__rating_ids
-msgid "Ratings"
-msgstr ""
-
-#. module: l10n_br_hr_sst_aso
 #: model:ir.model.fields.selection,name:l10n_br_hr_sst_aso.selection__hr_contract__l10n_br_sst_demissional__realizado
 msgid "Realizado"
 msgstr ""
