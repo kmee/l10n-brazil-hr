@@ -4,3 +4,7 @@ odoo-test-helper
 # installing a newer cryptography there breaks pyOpenSSL (oca_install_addons can
 # no longer probe the addons path).
 requests_pkcs12<1.23
+# esociallib requires xsdata[lxml], and xsdata 26.2+ requires lxml>=5, which
+# dropped lxml.html.clean (imported by Odoo): pip then upgrades the lxml of the
+# oca-ci image and odoo no longer imports. Same lxml as kmee/kmee-odoo-addons.
+lxml<5
