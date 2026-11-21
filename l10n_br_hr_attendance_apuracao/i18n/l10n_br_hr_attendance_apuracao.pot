@@ -789,11 +789,6 @@ msgid "Rascunho"
 msgstr ""
 
 #. module: l10n_br_hr_attendance_apuracao
-#: model:ir.model.fields,field_description:l10n_br_hr_attendance_apuracao.field_l10n_br_hr_apuracao_periodo__rating_ids
-msgid "Ratings"
-msgstr ""
-
-#. module: l10n_br_hr_attendance_apuracao
 #: model_terms:ir.ui.view,arch_db:l10n_br_hr_attendance_apuracao.l10n_br_hr_apuracao_periodo_view_form
 msgid "Reabrir"
 msgstr ""
