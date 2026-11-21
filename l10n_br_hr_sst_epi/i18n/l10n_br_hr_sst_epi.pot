@@ -574,11 +574,6 @@ msgid "Qtd."
 msgstr ""
 
 #. module: l10n_br_hr_sst_epi
-#: model:ir.model.fields,field_description:l10n_br_hr_sst_epi.field_l10n_br_sst_ca__rating_ids
-msgid "Ratings"
-msgstr ""
-
-#. module: l10n_br_hr_sst_epi
 #: model_terms:ir.ui.view,arch_db:l10n_br_hr_sst_epi.hr_personal_equipment_form_view_sst
 msgid "Registrar Devolução"
 msgstr ""
