@@ -109,16 +109,16 @@ class TestEncargosContabilizacao(PayrollCommon):
             rule = self.env.ref(xmlid)
             self.assertTrue(
                 rule.account_debit,
-                "regra %s deve ter conta de DESPESA mapeada" % rule.code,
+                f"regra {rule.code} deve ter conta de DESPESA mapeada",
             )
             self.assertEqual(rule.account_debit.account_type, "expense")
             self.assertTrue(
                 rule.account_credit,
-                "regra %s deve ter conta de PASSIVO mapeada" % rule.code,
+                f"regra {rule.code} deve ter conta de PASSIVO mapeada",
             )
             self.assertTrue(
                 rule.account_credit.account_type.startswith("liability"),
-                "regra %s deve creditar passivo" % rule.code,
+                f"regra {rule.code} deve creditar passivo",
             )
 
     def test_lancamento_com_encargo_patronal_balanceado(self):

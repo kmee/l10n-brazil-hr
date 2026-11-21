@@ -218,9 +218,8 @@ class L10nBrHrPtrpIntegridade(models.AbstractModel):
         """
         estado = self.verificar()
         linhas = [
-            "%s:%s" % (caminho, resumo)
-            for caminho, resumo in sorted(estado["manifesto"])
+            f"{caminho}:{resumo}" for caminho, resumo in sorted(estado["manifesto"])
         ]
         linhas.append("")
-        linhas.append("resumo=%s" % estado["resumo"])
+        linhas.append("resumo={}".format(estado["resumo"]))
         return "\n".join(linhas)

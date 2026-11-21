@@ -175,7 +175,7 @@ class L10nBrHrApuracaoDia(models.Model):
     @api.depends("employee_id", "date")
     def _compute_display_name_apuracao(self):
         for rec in self:
-            rec.display_name = "%s - %s" % (
+            rec.display_name = "{} - {}".format(
                 rec.employee_id.name or "",
                 fields.Date.to_string(rec.date) or "",
             )

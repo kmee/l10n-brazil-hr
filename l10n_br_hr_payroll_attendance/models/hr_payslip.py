@@ -178,7 +178,7 @@ class HrPayslip(models.Model):
         linhas = []
         for contrato in contracts:
             do_contrato = dias.filtered(
-                lambda dia: dia.employee_id == contrato.employee_id
+                lambda dia, employee=contrato.employee_id: dia.employee_id == employee
             )
             if not do_contrato:
                 continue

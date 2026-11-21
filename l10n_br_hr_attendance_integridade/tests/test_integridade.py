@@ -133,7 +133,7 @@ class TestIntegridadePtrp(TransactionCase):
         for modulo in ptrp_escopo.NUCLEO_ATESTADO:
             self.assertTrue(
                 any(caminho.startswith(modulo + "/") for caminho in caminhos),
-                "Módulo %s não aparece no manifesto" % modulo,
+                f"Módulo {modulo} não aparece no manifesto",
             )
 
     def test_modulos_do_ptrp_nao_contam_como_extensao(self):

@@ -242,7 +242,7 @@ class ESocialS1005(models.Model):
         if self.aliq_rat:
             data["aliq_rat"] = int(self.aliq_rat)
         if self.fap:
-            data["fap"] = "%.4f" % self.fap
+            data["fap"] = f"{self.fap:.4f}"
         if self.tp_insc_estab == "3":
             if not self.tp_caepf:
                 raise UserError(

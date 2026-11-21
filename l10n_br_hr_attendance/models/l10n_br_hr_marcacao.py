@@ -249,7 +249,7 @@ class L10nBrHrMarcacao(models.Model):
                 if rec.datetime_marcacao
                 else ""
             )
-            resultado.append((rec.id, "%s - %s (NSR %s)" % (nome, data, rec.nsr)))
+            resultado.append((rec.id, f"{nome} - {data} (NSR {rec.nsr})"))
         return resultado
 
     @api.constrains("tipo_marcacao", "origem", "motivo")
@@ -353,7 +353,7 @@ class L10nBrHrMarcacao(models.Model):
         registro anterior, quando existir - é isso que encadeia a série e faz
         qualquer reescrita retroativa saltar aos olhos.
         """
-        base = "%s%s%s%s%s%s%s%s" % (
+        base = "{}{}{}{}{}{}{}{}".format(
             str(nsr).zfill(9),
             tipo,
             dh_marcacao,

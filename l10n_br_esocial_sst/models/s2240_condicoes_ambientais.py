@@ -96,9 +96,9 @@ class ESocialS2240(models.Model):
         if risco.tp_aval:
             dados["tp_aval"] = int(risco.tp_aval)
         if risco.intensidade:
-            dados["int_conc"] = "%.4f" % risco.intensidade
+            dados["int_conc"] = f"{risco.intensidade:.4f}"
         if risco.limite_tolerancia:
-            dados["lim_tol"] = "%.4f" % risco.limite_tolerancia
+            dados["lim_tol"] = f"{risco.limite_tolerancia:.4f}"
         if risco.un_med:
             dados["un_med"] = int(risco.un_med)
         if risco.tecnica_medicao:

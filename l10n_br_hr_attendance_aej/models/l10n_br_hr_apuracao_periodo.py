@@ -310,7 +310,7 @@ class L10nBrHrApuracaoPeriodo(models.Model):
 
         trailer = {"tipoReg": "99"}
         for tipo, quantidade in contagem.items():
-            trailer["qtRegistrosTipo%s" % tipo] = quantidade
+            trailer[f"qtRegistrosTipo{tipo}"] = quantidade
         linhas.append(aej_layout.monta_registro("99", trailer))
 
         conteudo = aej_layout.TERMINADOR_LINHA.join(linhas)
