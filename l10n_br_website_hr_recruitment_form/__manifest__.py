@@ -3,8 +3,7 @@
 
 {
     "name": "Brazilian Localization Website Hr Recruitment Form",
-    "summary": """
-        Brazilian Localization Website Hr Recruitment Form""",
+    "summary": "Formulário público no site para o candidato completar os dados",
     "version": "18.0.1.0.0",
     "license": "AGPL-3",
     "author": "KMEE,Odoo Community Association (OCA)",
