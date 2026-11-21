@@ -236,8 +236,7 @@ def fatia(linha, leiaute, tipo, nome_campo):
         if campo.nome == nome_campo:
             return linha[campo.inicio : campo.inicio + campo.tamanho].strip()
     raise KeyError(
-        "Campo %s não existe no registro tipo %s do leiaute %s"
-        % (nome_campo, tipo, leiaute)
+        f"Campo {nome_campo} não existe no registro tipo {tipo} do leiaute {leiaute}"
     )
 
 

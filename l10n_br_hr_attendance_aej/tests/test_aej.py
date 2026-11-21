@@ -52,7 +52,7 @@ class TestAej(TransactionCase):
                         0,
                         0,
                         {
-                            "name": "%s manhã" % dia,
+                            "name": f"{dia} manhã",
                             "dayofweek": dia,
                             "hour_from": 8.0,
                             "hour_to": 12.0,
@@ -65,7 +65,7 @@ class TestAej(TransactionCase):
                         0,
                         0,
                         {
-                            "name": "%s tarde" % dia,
+                            "name": f"{dia} tarde",
                             "dayofweek": dia,
                             "hour_from": 13.0,
                             "hour_to": 17.0,
@@ -167,7 +167,7 @@ class TestAej(TransactionCase):
             self.assertEqual(
                 len(linha.split("|")),
                 len(aej_layout.CAMPOS[tipo]),
-                "Registro tipo %s com número de campos diferente do leiaute" % tipo,
+                f"Registro tipo {tipo} com número de campos diferente do leiaute",
             )
 
     def test_cabecalho_traz_periodo_e_versao(self):

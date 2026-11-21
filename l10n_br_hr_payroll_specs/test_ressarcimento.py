@@ -122,7 +122,10 @@ class TestRessarcimento(TransactionCase):
         self.assertFalse(expense.l10n_br_tributa_irrf)
 
     def test_ajuda_de_custo_isenta_ate_50_porcento_sm(self):
-        """Ajuda de custo até 50% do salário mínimo é isenta de IRRF (IN RFB 1.500/2014)."""
+        """Ajuda de custo até 50% do salário mínimo é isenta de IRRF.
+
+        IN RFB 1.500/2014.
+        """
         expense = self._create_expense(700.00)
         expense.write({"l10n_br_natureza": "ajuda_de_custo"})
         # Abaixo do limite: isento

@@ -165,7 +165,10 @@ class TestIRRFDeducoes(PayrollCommon):
         )
 
     def test_irrf_maior_65_anos_deducao(self):
-        """Maior de 65 anos tem dedução adicional na base do IRRF (Lei 7.713/88, art. 6°)."""
+        """Maior de 65 anos tem dedução adicional na base do IRRF.
+
+        Lei 7.713/88, art. 6°.
+        """
         emp = self._create_employee()
         # Funcionário com mais de 65 anos
         emp.write({"birthday": date(1955, 1, 1)})  # Nascido em 1955
@@ -173,7 +176,8 @@ class TestIRRFDeducoes(PayrollCommon):
         payslip = self._create_payslip(emp, contract)
         # Maiores de 65 têm deduções de aposentadoria sobre parcela isenta
         irrf = self._get_line_total(payslip, "IRRF")
-        # Valor exato depende da legislação vigente; aqui verificamos que é <= IRRF normal
+        # Valor exato depende da legislação vigente; aqui verificamos que é
+        # <= IRRF normal
         emp_normal = self._create_employee(name="Jovem", cpf="987.654.321-00")
         contract_normal = self._create_contract(emp_normal, wage=5000.00)
         payslip_normal = self._create_payslip(emp_normal, contract_normal)

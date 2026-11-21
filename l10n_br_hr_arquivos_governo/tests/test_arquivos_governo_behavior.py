@@ -45,7 +45,7 @@ class TestDirfBehavior(ArquivosGovernoCase):
     def test_name_follows_year_and_company(self):
         """Given a DIRF, When the year changes, Then the name is recomputed."""
         dirf = self._dirf()
-        self.assertEqual(dirf.name, "DIRF 2025 - %s" % self.company.name)
+        self.assertEqual(dirf.name, f"DIRF 2025 - {self.company.name}")
         dirf.ano_referencia = 2026
         self.assertIn("2026", dirf.name)
 

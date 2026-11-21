@@ -105,7 +105,8 @@ class TestAdicionalNoturno(PayrollCommon):
             }
         )
         payslip.compute_sheet()
-        # Com hora reduzida, 60 horas noturnas equivalem a 60 × (7/8) = 52.5 horas normais
+        # Com hora reduzida, 60 horas noturnas equivalem a
+        # 60 × (7/8) = 52.5 horas normais
         horas_computadas = payslip.l10n_br_horas_noturnas_computadas
         self.assertAlmostEqualMoney(horas_computadas, 52.5)
 

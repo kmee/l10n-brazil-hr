@@ -197,8 +197,7 @@ class ESocialS1299(models.Model):
         pendentes = self.pendencia_ids
         if pendentes:
             detalhe = "\n".join(
-                "- %s %s [%s]"
-                % (
+                "- {} {} [{}]".format(
                     evento.tipo,
                     evento.id_evento or _("sem Id"),
                     dict(evento._fields["state"].selection).get(

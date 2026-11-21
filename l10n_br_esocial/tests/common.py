@@ -68,9 +68,9 @@ def retorno_s5001(cpf, per_apur="2024-03", inss=330.0, base=3000.0, terc=172.5):
         ns=NS_5001,
         cpf=cpf,
         per_apur=per_apur,
-        inss="%.2f" % inss,
-        base="%.2f" % base,
-        terc="%.2f" % terc,
+        inss=f"{inss:.2f}",
+        base=f"{base:.2f}",
+        terc=f"{terc:.2f}",
         recibo=RECIBO_S1200,
     )
 
@@ -128,9 +128,9 @@ def retorno_s5011(per_apur="2024-03", inss_seg=330.0, base=3000.0, patronal=600.
     return _TEMPLATE_S5011.format(
         ns=NS_5011,
         per_apur=per_apur,
-        inss_seg="%.2f" % inss_seg,
-        base="%.2f" % base,
-        patronal="%.2f" % patronal,
+        inss_seg=f"{inss_seg:.2f}",
+        base=f"{base:.2f}",
+        patronal=f"{patronal:.2f}",
         recibo=RECIBO_S1299,
     )
 
@@ -178,7 +178,7 @@ def retorno_s5012(per_apur="2024-03", irrf=85.2):
     return _TEMPLATE_S5012.format(
         ns=NS_5012,
         per_apur=per_apur,
-        irrf="%.2f" % irrf,
+        irrf=f"{irrf:.2f}",
         recibo=RECIBO_S1210,
     )
 

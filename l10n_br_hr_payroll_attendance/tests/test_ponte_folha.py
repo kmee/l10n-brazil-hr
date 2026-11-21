@@ -35,7 +35,7 @@ class TestPonteFolha(TransactionCase):
                         0,
                         0,
                         {
-                            "name": "%s manhã" % dia,
+                            "name": f"{dia} manhã",
                             "dayofweek": dia,
                             "hour_from": 8.0,
                             "hour_to": 12.0,
@@ -48,7 +48,7 @@ class TestPonteFolha(TransactionCase):
                         0,
                         0,
                         {
-                            "name": "%s tarde" % dia,
+                            "name": f"{dia} tarde",
                             "dayofweek": dia,
                             "hour_from": 13.0,
                             "hour_to": 17.0,

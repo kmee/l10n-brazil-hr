@@ -94,7 +94,7 @@ class ESocialBaseIntermediario(models.AbstractModel):
                 continue
             regras.create(
                 {
-                    "name": "eSocial %s: multi-empresa" % ir_model.name,
+                    "name": f"eSocial {ir_model.name}: multi-empresa",
                     "model_id": ir_model.id,
                     "domain_force": "['|', ('company_id', '=', False), "
                     "('company_id', 'in', company_ids)]",

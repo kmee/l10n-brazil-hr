@@ -64,7 +64,7 @@ def minutos_trabalhados(pares):
 def minutos_intervalo(pares):
     """Soma dos intervalos ENTRE pares (a intrajornada efetivamente gozada)."""
     total = 0.0
-    for anterior, seguinte in zip(pares, pares[1:]):
+    for anterior, seguinte in zip(pares, pares[1:], strict=False):
         total += (seguinte[0] - anterior[1]).total_seconds() / 60.0
     return total
 
@@ -108,7 +108,7 @@ def variacao_dentro_da_tolerancia_por_marcacao(previstas, realizadas):
         return False
     return all(
         abs((real - previsto).total_seconds()) / 60.0 <= TOLERANCIA_POR_MARCACAO
-        for previsto, real in zip(sorted(previstas), sorted(realizadas))
+        for previsto, real in zip(sorted(previstas), sorted(realizadas), strict=False)
     )
 
 

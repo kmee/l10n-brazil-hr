@@ -48,7 +48,7 @@ class ArquivosGovernoCase(TransactionCase):
     def _create_contract(cls, employee, date_start, date_end=False, state="open"):
         return cls.env["hr.contract"].create(
             {
-                "name": "Contrato %s" % employee.name,
+                "name": f"Contrato {employee.name}",
                 "employee_id": employee.id,
                 "company_id": employee.company_id.id,
                 "wage": 3000.0,
@@ -68,7 +68,7 @@ class ArquivosGovernoCase(TransactionCase):
         )
         payslip = cls.env["hr.payslip"].create(
             {
-                "name": "Holerite %s" % date_from,
+                "name": f"Holerite {date_from}",
                 "employee_id": employee.id,
                 "contract_id": contract.id,
                 "company_id": (company or cls.company).id,

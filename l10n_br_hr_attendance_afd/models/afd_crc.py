@@ -50,7 +50,7 @@ def crc16_kermit(dados):
 
 def crc16_hex(dados):
     """CRC-16/KERMIT nos 4 caracteres hexadecimais gravados no AFD."""
-    return "%04X" % crc16_kermit(dados)
+    return f"{crc16_kermit(dados):04X}"
 
 
 def crc_da_linha(linha):
