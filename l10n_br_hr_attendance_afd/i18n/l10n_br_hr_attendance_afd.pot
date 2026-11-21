@@ -429,11 +429,6 @@ msgid "Rascunho"
 msgstr ""
 
 #. module: l10n_br_hr_attendance_afd
-#: model:ir.model.fields,field_description:l10n_br_hr_attendance_afd.field_l10n_br_hr_afd_import__rating_ids
-msgid "Ratings"
-msgstr ""
-
-#. module: l10n_br_hr_attendance_afd
 #: model_terms:ir.ui.view,arch_db:l10n_br_hr_attendance_afd.l10n_br_hr_afd_import_view_form
 msgid "Reconciliar pendentes"
 msgstr ""
