@@ -23,7 +23,6 @@ _INTERVALS = {
 
 
 class L10n_brPublicHolidaysWizard(models.TransientModel):
-
     _name = "l10n_br.public.holidays.wizard"
     _description = "Brazilian Public Holidays Import Wizard"
 
