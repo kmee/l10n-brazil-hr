@@ -1,5 +1,6 @@
 {
     "name": "BR Payroll - Gerador de Holerites",
+    "summary": "Geração em lote de holerites para simular um ano de folha",
     "version": "18.0.1.0.0",
     "license": "AGPL-3",
     "author": "KMEE, Odoo Community Association (OCA)",

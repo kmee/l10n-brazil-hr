@@ -2,7 +2,7 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 {
     "name": "Substituicao de Funcionarios - Folha BR",
-    "summary": "Registro de substituicao temporaria de funcionarios",
+    "summary": "Registro de substituição temporária de funcionários",
     "version": "18.0.1.0.0",
     "license": "AGPL-3",
     "author": "KMEE, Odoo Community Association (OCA)",
