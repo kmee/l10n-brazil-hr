@@ -3,7 +3,7 @@
 
 {
     "name": "Registro de Ponto Brasileiro (base)",
-    "summary": "Marcacao de ponto imutavel com NSR e cadastro de REP "
+    "summary": "Marcação de ponto imutável com NSR e cadastro de REP "
     "(Portaria MTP 671/2021)",
     "version": "17.0.1.0.0",
     "category": "Human Resources/Attendances",
