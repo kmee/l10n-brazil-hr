@@ -114,7 +114,7 @@ class L10nBrPayrollInssFaixa(models.Model):
     @api.depends("valor_min", "valor_max", "aliquota", "date_start")
     def _compute_name(self):
         for rec in self:
-            rec.name = "[%s] R$ %.2f-%.2f · %.2f%%" % (
+            rec.name = "[{}] R$ {:.2f}-{:.2f} · {:.2f}%".format(
                 rec.date_start or "",
                 rec.valor_min,
                 rec.valor_max,
@@ -162,7 +162,7 @@ class L10nBrPayrollIrrfFaixa(models.Model):
     @api.depends("base_min", "base_max", "aliquota", "date_start")
     def _compute_name(self):
         for rec in self:
-            rec.name = "[%s] R$ %.2f-%.2f · %.2f%%" % (
+            rec.name = "[{}] R$ {:.2f}-{:.2f} · {:.2f}%".format(
                 rec.date_start or "",
                 rec.base_min,
                 rec.base_max,
@@ -247,7 +247,7 @@ class L10nBrPayrollIrrfRedutor(models.Model):
     @api.depends("rendimento_max", "valor_fixo", "fator", "date_start")
     def _compute_name(self):
         for rec in self:
-            rec.name = "[%s] até R$ %.2f -> %.2f - %.6f x rendimento" % (
+            rec.name = "[{}] até R$ {:.2f} -> {:.2f} - {:.6f} x rendimento".format(
                 rec.date_start or "",
                 rec.rendimento_max,
                 rec.valor_fixo,
@@ -285,7 +285,7 @@ class L10nBrPayrollSalFamiliaFaixa(models.Model):
     @api.depends("base_max", "valor", "date_start")
     def _compute_name(self):
         for rec in self:
-            rec.name = "[%s] até R$ %.2f -> R$ %.2f" % (
+            rec.name = "[{}] até R$ {:.2f} -> R$ {:.2f}".format(
                 rec.date_start or "",
                 rec.base_max,
                 rec.valor,
@@ -362,7 +362,7 @@ class L10nBrPayrollCprbTransicao(models.Model):
     @api.depends("date_start", "perc_cprb", "perc_cpp")
     def _compute_name(self):
         for rec in self:
-            rec.name = "[%s] CPRB %.0f%% · CPP folha %.0f%%" % (
+            rec.name = "[{}] CPRB {:.0f}% · CPP folha {:.0f}%".format(
                 rec.date_start or "",
                 rec.perc_cprb,
                 rec.perc_cpp,
@@ -397,7 +397,7 @@ class L10nBrPayrollIrrfDependente(models.Model):
     @api.depends("valor", "date_start")
     def _compute_name(self):
         for rec in self:
-            rec.name = "[%s] R$ %.2f" % (rec.date_start or "", rec.valor)
+            rec.name = "[{}] R$ {:.2f}".format(rec.date_start or "", rec.valor)
 
     @api.model
     def _valor(self, competencia):

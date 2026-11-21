@@ -71,7 +71,7 @@ MODULOS_DO_PTRP = tuple(NUCLEO_ATESTADO) + ("l10n_br_hr_attendance_integridade",
 
 def marca_de_ausencia(nome_modulo):
     """Entrada de manifesto para módulo do escopo que não está instalado."""
-    return "%s/(modulo nao instalado)" % nome_modulo
+    return f"{nome_modulo}/(modulo nao instalado)"
 
 
 def _sha256_do_arquivo(caminho):
@@ -103,12 +103,10 @@ def manifesto_do_modulo(caminho_modulo, nome_modulo, padroes):
                 if fnmatch(relativo.replace(os.sep, "/"), padrao):
                     encontrados.append((relativo.replace(os.sep, "/"), completo))
         if not encontrados:
-            entradas.append(("%s/%s" % (nome_modulo, padrao), ""))
+            entradas.append((f"{nome_modulo}/{padrao}", ""))
             continue
         for relativo, completo in sorted(encontrados):
-            entradas.append(
-                ("%s/%s" % (nome_modulo, relativo), _sha256_do_arquivo(completo))
-            )
+            entradas.append((f"{nome_modulo}/{relativo}", _sha256_do_arquivo(completo)))
     return entradas
 
 
@@ -119,7 +117,5 @@ def resumo_do_manifesto(entradas):
     caminho. Simples de reproduzir em qualquer linguagem, que é o requisito
     de quem precisa conferir sem confiar na nossa implementação.
     """
-    canonico = "\n".join(
-        "%s:%s" % (caminho, resumo) for caminho, resumo in sorted(entradas)
-    )
+    canonico = "\n".join(f"{caminho}:{resumo}" for caminho, resumo in sorted(entradas))
     return hashlib.sha256(canonico.encode("utf-8")).hexdigest()

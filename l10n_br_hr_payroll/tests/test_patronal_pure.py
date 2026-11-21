@@ -74,8 +74,8 @@ class TestAliquotasPorRegime(BaseCase):
         """Simples I/II/III/V: nada de CPP, RAT ou terceiros (LC 123 art. 13)."""
         for anexo in ("i", "ii", "iii", "v"):
             aliq = self._aliquotas(tax_framework="1", simples_anexo=anexo)
-            self.assertEqual(aliq["cpp"], 0.0, "anexo %s não deve ter CPP" % anexo)
-            self.assertEqual(aliq["rat"], 0.0, "anexo %s não deve ter RAT" % anexo)
+            self.assertEqual(aliq["cpp"], 0.0, f"anexo {anexo} não deve ter CPP")
+            self.assertEqual(aliq["rat"], 0.0, f"anexo {anexo} não deve ter RAT")
             self.assertEqual(aliq["terceiros"], 0.0)
             self.assertAlmostEqual(aliq["fgts"], 0.08)
             self.assertEqual(aliq["total_patronal"], 0.0)

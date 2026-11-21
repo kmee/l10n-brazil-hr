@@ -145,7 +145,7 @@ class L10nBrSstCa(models.Model):
     def _compute_name(self):
         for rec in self:
             partes = [
-                p for p in (rec.numero and "CA %s" % rec.numero, rec.descricao_epi) if p
+                p for p in (rec.numero and f"CA {rec.numero}", rec.descricao_epi) if p
             ]
             rec.name = " - ".join(partes)
 

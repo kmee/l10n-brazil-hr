@@ -35,11 +35,7 @@ class Ocorrencia:
         self.conteudo = conteudo
 
     def __repr__(self):
-        return "<Ocorrencia linha=%s %s: %s>" % (
-            self.numero_linha,
-            self.codigo,
-            self.mensagem,
-        )
+        return f"<Ocorrencia linha={self.numero_linha} {self.codigo}: {self.mensagem}>"
 
 
 class ResultadoAfd:
@@ -72,7 +68,7 @@ def _para_datetime_utc(texto):
     """
     casamento = RE_DATA_HORA.match(texto.strip())
     if not casamento:
-        raise ValueError("Data/hora fora do formato do Anexo V: %r" % texto)
+        raise ValueError(f"Data/hora fora do formato do Anexo V: {texto!r}")
     ano, mes, dia, hora, minuto, segundo, sinal, tz_h, tz_m = casamento.groups()
     deslocamento = timedelta(hours=int(tz_h), minutes=int(tz_m))
     if sinal == "-":
@@ -153,7 +149,7 @@ def ler_afd(conteudo, leiaute=None, fuso_horas=-3):
             resultado.adiciona_ocorrencia(
                 indice,
                 "tipo_desconhecido",
-                "Tipo de registro %r não previsto no leiaute %s." % (tipo, leiaute),
+                f"Tipo de registro {tipo!r} não previsto no leiaute {leiaute}.",
                 linha[:60],
             )
             continue
@@ -175,9 +171,9 @@ def ler_afd(conteudo, leiaute=None, fuso_horas=-3):
                 resultado.adiciona_ocorrencia(
                     indice,
                     "crc",
-                    "CRC-16 divergente no registro tipo %s: arquivo traz %r, "
-                    "o cálculo dá %r."
-                    % (tipo, linha_crc[-4:], crc_da_linha(linha_crc)),
+                    f"CRC-16 divergente no registro tipo {tipo}: "
+                    f"arquivo traz {linha_crc[-4:]!r}, "
+                    f"o cálculo dá {crc_da_linha(linha_crc)!r}.",
                     linha[:60],
                 )
 
@@ -306,7 +302,7 @@ def _confere_trailer(resultado):
         return
     lidos = {"qtd_tipo_3": 0, "qtd_tipo_7": 0}
     for marcacao in resultado.marcacoes:
-        chave = "qtd_tipo_%s" % marcacao["tipo_registro"]
+        chave = "qtd_tipo_{}".format(marcacao["tipo_registro"])
         lidos[chave] = lidos.get(chave, 0) + 1
     for chave, quantidade in lidos.items():
         declarado = resultado.trailer.get(chave)
@@ -395,5 +391,5 @@ def nome_arquivo_afd(tipo_rep, identificador, cnpj_cpf):
     """Nome do AFD conforme o item 10 do Anexo V."""
     sufixo = {"rep_c": "REP_C", "rep_a": "REP_A", "rep_p": "REP_P"}[tipo_rep]
     if tipo_rep == "rep_a":
-        return "AFD%s%s.txt" % (cnpj_cpf, sufixo)
-    return "AFD%s%s%s.txt" % (identificador, cnpj_cpf, sufixo)
+        return f"AFD{cnpj_cpf}{sufixo}.txt"
+    return f"AFD{identificador}{cnpj_cpf}{sufixo}.txt"

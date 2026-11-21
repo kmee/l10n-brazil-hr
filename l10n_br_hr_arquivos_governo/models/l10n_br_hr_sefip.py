@@ -138,7 +138,7 @@ class L10nBrHrSefip(models.Model):
     def _compute_name(self):
         for rec in self:
             mes_label = dict(MESES).get(rec.mes, "")
-            rec.name = "SEFIP %s/%s - %s" % (
+            rec.name = "SEFIP {}/{} - {}".format(
                 mes_label,
                 rec.ano or "",
                 rec.company_id.name or "",

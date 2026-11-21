@@ -241,5 +241,5 @@ class ESocialS1210Pagamento(models.Model):
             "tp_pgto": int(self.tp_pgto),
             "per_ref": self.per_ref,
             "ide_dm_dev": self.ide_dm_dev,
-            "vr_liq": "%.2f" % self.vr_liq,
+            "vr_liq": f"{self.vr_liq:.2f}",
         }

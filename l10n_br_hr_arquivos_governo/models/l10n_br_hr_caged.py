@@ -103,7 +103,7 @@ class L10nBrHrCaged(models.Model):
     def _compute_name(self):
         for rec in self:
             mes_label = dict(MESES[:12]).get(rec.mes, "")
-            rec.name = "CAGED %s/%s - %s" % (
+            rec.name = "CAGED {}/{} - {}".format(
                 mes_label,
                 rec.ano or "",
                 rec.company_id.name or "",

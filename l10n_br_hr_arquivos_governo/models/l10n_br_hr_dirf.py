@@ -94,7 +94,7 @@ class HrDirf(models.Model):
     @api.depends("ano_referencia", "company_id")
     def _compute_name(self):
         for rec in self:
-            rec.name = "DIRF %s - %s" % (
+            rec.name = "DIRF {} - {}".format(
                 rec.ano_referencia or "",
                 rec.company_id.name or "",
             )
@@ -166,8 +166,7 @@ class HrDirf(models.Model):
             (partner.cnpj_cpf or "").replace(".", "").replace("-", "").replace("/", "")
         )
         lines.append(
-            "RESPO|%s|%s|%s|%s|"
-            % (
+            "RESPO|{}|{}|{}|{}|".format(
                 cpf_resp[:11].zfill(11),
                 _normalize(partner.name, 60),
                 "0",
@@ -179,11 +178,8 @@ class HrDirf(models.Model):
             (partner.cnpj_cpf or "").replace(".", "").replace("-", "").replace("/", "")
         )
         lines.append(
-            "DECPJ|%s|%s|0|N|N|N|N|N|N|N|0|N|N|"
-            % (
-                cnpj[:14].zfill(14),
-                _normalize(company.name, 150),
-            )
+            f"DECPJ|{cnpj[:14].zfill(14)}|{_normalize(company.name, 150)}"
+            "|0|N|N|N|N|N|N|N|0|N|N|"
         )
         return lines
 
@@ -201,30 +197,27 @@ class HrDirf(models.Model):
 
         # BPFDEC - beneficiário pessoa física
         lines.append(
-            "BPFDEC|%s|%s|N|N|N|N|N|N|N|N|"
-            % (
-                cpf[:11].zfill(11),
-                _normalize(employee.name, 60),
-            )
+            f"BPFDEC|{cpf[:11].zfill(11)}|{_normalize(employee.name, 60)}"
+            "|N|N|N|N|N|N|N|N|"
         )
 
         # RTRT - Rendimentos tributáveis por mês
         for month in range(1, 13):
             month_payslips = self._get_payslips_employee(employee, month)
             rendimento = self._get_line_total(month_payslips, "BRUTO")
-            lines.append("RTRT|%s|" % _format_value(rendimento))
+            lines.append(f"RTRT|{_format_value(rendimento)}|")
 
         # RTPO - Previdência oficial por mês
         for month in range(1, 13):
             month_payslips = self._get_payslips_employee(employee, month)
             inss = self._get_line_total(month_payslips, "INSS")
-            lines.append("RTPO|%s|" % _format_value(inss))
+            lines.append(f"RTPO|{_format_value(inss)}|")
 
         # RTDP - IR retido por mês
         for month in range(1, 13):
             month_payslips = self._get_payslips_employee(employee, month)
             irrf = self._get_line_total(month_payslips, "IRRF")
-            lines.append("RTDP|%s|" % _format_value(irrf))
+            lines.append(f"RTDP|{_format_value(irrf)}|")
 
         return lines
 

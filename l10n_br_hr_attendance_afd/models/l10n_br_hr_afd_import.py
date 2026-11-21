@@ -187,7 +187,7 @@ class L10nBrHrAfdImport(models.Model):
         if not resultado.ocorrencias:
             return ""
         return "\n".join(
-            "Linha %s [%s]: %s" % (o.numero_linha, o.codigo, o.mensagem)
+            f"Linha {o.numero_linha} [{o.codigo}]: {o.mensagem}"
             for o in resultado.ocorrencias
         )
 

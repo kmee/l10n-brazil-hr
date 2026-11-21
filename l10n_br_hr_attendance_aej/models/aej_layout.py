@@ -153,7 +153,7 @@ def nome_arquivo_aej(cnpj_cpf, date_from, date_to):
     identifica empregador e período, que é o que o Auditor-Fiscal precisa para
     conferir a competência pedida.
     """
-    return "AEJ%s%s%s.txt" % (
+    return "AEJ{}{}{}.txt".format(
         cnpj_cpf,
         date_from.strftime("%Y%m%d"),
         date_to.strftime("%Y%m%d"),
