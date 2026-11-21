@@ -12,7 +12,8 @@ from datetime import date
 
 from odoo.tests.common import TransactionCase
 
-from ..models.salary_rules_br import calc_inss as _calc_inss, calc_irrf as _calc_irrf
+from ..models.salary_rules_br import calc_inss as _calc_inss
+from ..models.salary_rules_br import calc_irrf as _calc_irrf
 from .common import PayrollCommon
 from .fixtures import FAIXAS_INSS_2024, FAIXAS_IRRF_2024
 

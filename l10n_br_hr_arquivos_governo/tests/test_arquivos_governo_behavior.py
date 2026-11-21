@@ -6,7 +6,8 @@ import base64
 from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import tagged
 
-from ..models.l10n_br_hr_caged import _normalize as caged_normalize, _num
+from ..models.l10n_br_hr_caged import _normalize as caged_normalize
+from ..models.l10n_br_hr_caged import _num
 from ..models.l10n_br_hr_dirf import _format_value, _normalize
 from ..models.l10n_br_hr_sefip import _val
 from .common import ArquivosGovernoCase

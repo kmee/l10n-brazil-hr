@@ -15,8 +15,14 @@ from odoo.tests.common import BaseCase
 
 from odoo.addons.l10n_br_hr_payroll.models.salary_rules_br import (
     calc_inss as _calc_inss,
+)
+from odoo.addons.l10n_br_hr_payroll.models.salary_rules_br import (
     calc_irrf as _calc_irrf,
+)
+from odoo.addons.l10n_br_hr_payroll.models.salary_rules_br import (
     calc_salario_familia as _calc_salario_familia,
+)
+from odoo.addons.l10n_br_hr_payroll.models.salary_rules_br import (
     calc_vt,
     round_money,
 )

@@ -14,14 +14,22 @@ from ..models.salary_rules_br import (
     calc_aviso_previo_dias,
     calc_decimo_avos,
     calc_ferias_dias,
-    calc_inss as _calc_inss,
-    calc_irrf as _calc_irrf,
-    calc_irrf_mais_favoravel as _calc_irrf_mais_favoravel,
     calc_pensao_alimenticia,
-    calc_salario_familia as _calc_salario_familia,
     calc_vt,
     dias_dsr,
     dias_trabalhados_mes,
+)
+from ..models.salary_rules_br import (
+    calc_inss as _calc_inss,
+)
+from ..models.salary_rules_br import (
+    calc_irrf as _calc_irrf,
+)
+from ..models.salary_rules_br import (
+    calc_irrf_mais_favoravel as _calc_irrf_mais_favoravel,
+)
+from ..models.salary_rules_br import (
+    calc_salario_familia as _calc_salario_familia,
 )
 from .fixtures import (
     FAIXAS_INSS_2024,
