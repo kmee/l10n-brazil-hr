@@ -370,9 +370,21 @@ ul.auto-toc {
 !! source digest: sha256:752d5914389dd1ab3ecccbfa3dafeacc5af9e8e70f7e60f9bf9b7b14b395ef7f
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/licence-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/kmee/l10n-brazil-hr/tree/17.0/l10n_br_hr_overtime_custom_multiplier"><img alt="kmee/l10n-brazil-hr" src="https://img.shields.io/badge/github-kmee%2Fl10n--brazil--hr-lightgray.png?logo=github" /></a></p>
-<p>Module allows companies to apply a custom multiplier to overtime
-calculations in the Brazilian localization, providing flexible and
-configurable overtime management.</p>
+<p>Multiplicador de horas extras por faixa.</p>
+<p>As faixas de multiplicador definem, por dia da semana e para feriados, a
+partir de quantas horas e até quantas horas extras vale cada
+multiplicador. Quando o Odoo calcula as horas extras de uma presença, as
+horas são distribuídas pelas faixas do dia e cada parte é multiplicada
+pelo fator da sua faixa; o registro guarda as horas sem multiplicador, o
+multiplicador aplicado e a faixa.</p>
+<p>O módulo também traz:</p>
+<ul class="simple">
+<li>exceções de presença, para que um dia seja tratado como outro dia da
+semana (por exemplo, um sábado trabalhado como dia útil);</li>
+<li>um assistente para registrar o pagamento de horas extras, que baixa o
+valor pago do saldo do funcionário.</li>
+</ul>
+<p>Os feriados vêm do <tt class="docutils literal">l10n_br_hr_holidays_public</tt>.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">

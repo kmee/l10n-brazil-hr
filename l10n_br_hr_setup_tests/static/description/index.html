@@ -370,14 +370,14 @@ ul.auto-toc {
 !! source digest: sha256:2aaedd2333c46295009ddb7e3c2922611019030dd0d42577df60a3a8279de54c
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/licence-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/kmee/l10n-brazil-hr/tree/17.0/l10n_br_hr_setup_tests"><img alt="kmee/l10n-brazil-hr" src="https://img.shields.io/badge/github-kmee%2Fl10n--brazil--hr-lightgray.png?logo=github" /></a></p>
-<p>Technical module for the CI of this repository. It is not meant for
-production databases.</p>
-<p>The CI installs only the modules of this repository and their
-dependencies. Without a Brazilian chart of accounts module, the demo
-companies of <tt class="docutils literal">l10n_br_base</tt> have no chart of accounts and any test
-that creates an invoice, a journal entry or a payslip posting on them
-fails. Depending on <tt class="docutils literal">l10n_br_coa_generic</tt> loads the Brazilian chart on
-the demo companies, as in the OCA/l10n-brazil CI.</p>
+<p>Módulo técnico para o CI deste repositório. Não deve ser instalado em
+bases de produção.</p>
+<p>O CI instala só os módulos deste repositório e as suas dependências. Sem
+um módulo de plano de contas brasileiro, as empresas de demonstração do
+<tt class="docutils literal">l10n_br_base</tt> ficam sem plano de contas, e qualquer teste que crie
+fatura, lançamento contábil ou contabilize um holerite nelas falha. Ao
+depender do <tt class="docutils literal">l10n_br_coa_generic</tt>, o módulo carrega o plano brasileiro
+nas empresas de demonstração, como no CI do OCA/l10n-brazil.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
