@@ -1,0 +1,7 @@
+odoo-test-helper
+# Same pins as kmee/kmee-odoo-addons 16.0 (the image the HR modules are delivered
+# with): lxml>=5 dropped lxml.html.clean, imported by Odoo 16, and signxml 5.x
+# needs a cryptography that breaks the pyOpenSSL of the Odoo 16 stack.
+lxml==4.6.5
+pyopenssl==22.1.0
+signxml<3.1.0

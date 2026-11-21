@@ -7,7 +7,7 @@
     "version": "16.0.1.1.0",
     "license": "AGPL-3",
     "author": "KMEE,Odoo Community Association (OCA)",
-    "website": "https://github.com/KMEE/kmee-odoo-addons",
+    "website": "https://github.com/kmee/l10n-brazil-hr",
     "category": "Human Resources",
     "depends": [
         "l10n_br_hr_sst",

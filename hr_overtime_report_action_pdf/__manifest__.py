@@ -5,7 +5,7 @@
     "author": "KMEE",
     "category": "Human Resources",
     "license": "AGPL-3",
-    "website": "https://github.com/KMEE/kmee-odoo-addons",
+    "website": "https://github.com/kmee/l10n-brazil-hr",
     "depends": ["hr", "hr_attendance", "web", "l10n_br_hr_overtime_custom_multiplier"],
     "data": [
         "security/ir.model.access.csv",

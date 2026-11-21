@@ -9,7 +9,7 @@
     "category": "Human Resources/Attendances",
     "license": "AGPL-3",
     "author": "KMEE,Odoo Community Association (OCA)",
-    "website": "https://github.com/KMEE/kmee-odoo-addons",
+    "website": "https://github.com/kmee/l10n-brazil-hr",
     "maintainers": ["mileo"],
     "depends": [
         "l10n_br_hr_attendance_apuracao",
