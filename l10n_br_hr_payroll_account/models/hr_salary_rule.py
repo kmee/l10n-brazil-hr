@@ -148,7 +148,7 @@ class HrSalaryRule(models.Model):
 
         Entrega uma contabilização funcional out-of-the-box: vincula as regras
         salariais BR a contas de despesa/passivo do plano de contas vigente e
-        define a ``default_account_id``/``company_id`` do diário Folha de
+        define a ``default_account_id`` do diário Folha de
         Pagamento (usado pelo OCA ``payroll_account`` para balancear o
         lançamento).
 
@@ -173,7 +173,7 @@ class HrSalaryRule(models.Model):
         )
         if company is None:
             company = (
-                (journal.company_id if journal and journal.company_id else False)
+                (journal.company_id if journal else False)
                 or self.env.ref("base.main_company", raise_if_not_found=False)
                 or self.env.company
             )
@@ -206,20 +206,13 @@ class HrSalaryRule(models.Model):
                     continue
                 if slot not in accounts:
                     accounts[slot] = self._l10n_br_find_account(company, slot)
-                if accounts[slot]:
-                    vals[field] = accounts[slot].id
+                vals[field] = accounts[slot].id
             if vals:
                 rule.write(vals)
 
-        # Diário FOPAG: garante conta padrão (conta de balanceamento) e empresa.
-        if journal and (not journal.company_id or journal.company_id == company):
-            jvals = {}
-            if not journal.company_id:
-                jvals["company_id"] = company.id
-            if not journal.default_account_id:
-                jvals["default_account_id"] = liability.id
-            if jvals:
-                journal.write(jvals)
+        # Diário FOPAG: garante a conta padrão (conta de balanceamento).
+        if journal and journal.company_id == company and not journal.default_account_id:
+            journal.default_account_id = liability
 
         _logger.info(
             "FOPAG: mapeamento regra→conta aplicado para a empresa %s.",
