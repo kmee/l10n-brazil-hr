@@ -74,12 +74,6 @@ class ESocialS2210(models.Model):
         for rec in self:
             acidente = rec.acidente_id
             faltando = []
-            if not acidente.situacao_geradora_id:
-                faltando.append(_("situação geradora"))
-            if not acidente.parte_corpo_id:
-                faltando.append(_("parte do corpo atingida"))
-            if not acidente.agente_causador_id:
-                faltando.append(_("agente causador"))
             if not acidente.dsc_lograd or not acidente.nr_lograd:
                 faltando.append(_("logradouro e número do local do acidente"))
             # localAcidente/codPostal: required when tpLocal = 2. The model has
@@ -123,11 +117,6 @@ class ESocialS2210(models.Model):
                     }
                 )
             rec._validar_hrs_trab_antes_acid()
-            if acidente.houve_obito and not acidente.date_obito:
-                raise UserError(
-                    _("S-2210 de %(nome)s: informe a data do óbito.")
-                    % {"nome": rec.employee_id.name}
-                )
             if rec.cat_id.tipo_cat_codigo in ("2", "3") and not (
                 rec.cat_id.nr_rec_cat_orig
             ):
@@ -236,16 +225,13 @@ class ESocialS2210(models.Model):
                 "ind_internacao": acidente.ind_internacao or "N",
                 "ind_afast": acidente.ind_afast or "N",
                 "dsc_lesao": acidente.natureza_lesao_id.codigo,
+                "dur_trat": str(acidente.dur_trat),
+                "cod_cid": acidente.cid_id.codigo,
                 "nm_emit": acidente.nm_emit,
+                "ide_oc": int(acidente.ide_oc_emit),
             }
         )
         self._copiar_opcionais(dados, acidente, self._CAMPOS_OPCIONAIS_ATESTADO)
-        if acidente.dur_trat:
-            dados["dur_trat"] = str(acidente.dur_trat)
-        if acidente.cid_id:
-            dados["cod_cid"] = acidente.cid_id.codigo
-        if acidente.ide_oc_emit:
-            dados["ide_oc"] = int(acidente.ide_oc_emit)
         if acidente.uf_oc_emit:
             dados["uf_oc"] = acidente.uf_oc_emit.upper()
 

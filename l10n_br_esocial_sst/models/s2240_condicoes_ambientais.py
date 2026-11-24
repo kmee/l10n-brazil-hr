@@ -114,20 +114,20 @@ class ESocialS2240(models.Model):
             return dados
 
         dados["efic_epi"] = risco.efic_epi or "N"
+        # _validar_risco already requires a delivery with CA here.
         cas = entregas.mapped("l10n_br_sst_ca_id")
-        if cas:
-            dados["epi"] = [{"doc_aval": ca.numero} for ca in cas]
-            principal = cas[0]
-            dados.update(
-                {
-                    "med_protecao": principal.med_protecao or "N",
-                    "cond_functo": principal.cond_functo or "N",
-                    "uso_inint": principal.uso_inint or "N",
-                    "prz_valid": principal.prz_valid or "N",
-                    "periodic_troca": principal.periodic_troca or "N",
-                    "higienizacao": principal.higienizacao or "N",
-                }
-            )
+        dados["epi"] = [{"doc_aval": ca.numero} for ca in cas]
+        principal = cas[0]
+        dados.update(
+            {
+                "med_protecao": principal.med_protecao or "N",
+                "cond_functo": principal.cond_functo or "N",
+                "uso_inint": principal.uso_inint or "N",
+                "prz_valid": principal.prz_valid or "N",
+                "periodic_troca": principal.periodic_troca or "N",
+                "higienizacao": principal.higienizacao or "N",
+            }
+        )
         return dados
 
     # ── Validações antes do envio (RS-17) ───────────────────────────────────
@@ -178,17 +178,8 @@ class ESocialS2240(models.Model):
         nome = self.employee_id.name
         agente = risco.agente_nocivo_id.name
         if risco.ausencia_de_risco:
-            if risco.utiliz_epc not in (False, "0") or risco.utiliz_epi not in (
-                False,
-                "0",
-            ):
-                raise UserError(
-                    _(
-                        "S-2240 de %(nome)s: com ausência de agente nocivo, a "
-                        "utilização de EPC e de EPI deve ser 'não se aplica'."
-                    )
-                    % {"nome": nome}
-                )
+            # EPC and EPI as "not applicable" is already enforced by the risk
+            # factor constraint (_check_ausencia_de_risco).
             return
         # agNoc/tpAval: required and exclusive when codAgNoc is not 09.01.001
         # (leiaute S-1.3).
