@@ -5,11 +5,13 @@ import base64
 import logging
 
 import pytz
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.serialization import pkcs7
 from erpbrasil.base.fiscal import cnpj_cpf
 from erpbrasil.base.misc import punctuation_rm
 
 from odoo import _, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 from . import aej_layout
 
@@ -345,53 +347,68 @@ class L10nBrHrApuracaoPeriodo(models.Model):
         return True
 
     def _certificado_ptrp(self):
-        """Certificado ICP-Brasil usado para assinar o AEJ.
+        """ICP-Brasil certificate used to sign the AEJ.
 
-        Reusa o cadastro de certificado A1 do ``l10n_br_fiscal_certificate``
-        quando disponível, em vez de criar um cadastro paralelo de chaves.
+        Reuses the A1 certificate managed by ``l10n_br_fiscal_certificate``
+        (optional, outside the dependencies) through
+        ``res.company._get_br_ecertificate``, which returns the
+        ``erpbrasil.assinatura`` ``Certificado`` already opened from the
+        PFX. Art. 86, par. 2 of Portaria MTP 671/2021 accepts the
+        certificate of the PTRP developer or of the employer.
+
+        Returns:
+            The ``Certificado`` or ``None`` when the company has no valid
+            certificate. Errors opening the PFX are raised to the caller.
         """
         self.ensure_one()
-        empresa = self.company_id
-        if not hasattr(empresa, "certificate_ecnpj_id"):
+        # The signing key is read as superuser: the HR user generating the
+        # file does not need access to the certificates.
+        empresa = self.company_id.sudo()
+        if not hasattr(empresa, "_get_br_ecertificate"):
             return None
-        certificado = empresa.certificate_ecnpj_id or empresa.certificate_ecpf_id
-        # ``is_valid`` é calculado e não armazenado: a validade se confere no
-        # registro, não no domínio de busca.
-        return certificado if certificado and certificado.is_valid else None
+        try:
+            return empresa._get_br_ecertificate()
+        except ValidationError:
+            # No certificate set, or out of its validity period.
+            return None
 
     def _assinar_aej(self, conteudo_bruto):
-        """Assinatura CAdES destacada (.p7s), quando há certificado.
+        """Detached signature (.p7s) of the AEJ, when there is a certificate.
 
-        Sem certificado configurado o arquivo é gerado mesmo assim: ele já
-        serve para conferência interna, e travar a geração deixaria o RH sem
-        nada em mãos. A ausência da assinatura fica registrada no chatter.
+        Art. 88, par. 2 of Portaria MTP 671/2021: CAdES (CMS) signature
+        stored in a detached ``.p7s``. Signs the exact AEJ bytes (``Binary``:
+        no MIME canonicalization) with SHA-256 and embeds the signer
+        certificate and its chain. See ``readme/ROADMAP.md`` for the CAdES
+        attributes not generated yet.
+
+        Without a certificate the file is still generated: it already serves
+        for internal review, and blocking it would leave HR with nothing.
+        The missing signature is logged in the chatter.
         """
         self.ensure_one()
-        certificado = self._certificado_ptrp()
-        if not certificado:
-            self.message_post(
-                body=_(
-                    "AEJ gerado SEM assinatura: não há certificado A1 válido "
-                    "cadastrado. Os arts. 86 a 88 da Portaria 671/2021 exigem "
-                    "assinatura com certificado ICP-Brasil para a entrega "
-                    "oficial."
+        try:
+            certificado = self._certificado_ptrp()
+            if not certificado:
+                self.message_post(
+                    body=_(
+                        "AEJ gerado SEM assinatura: não há certificado A1 válido "
+                        "cadastrado. Os arts. 86 a 88 da Portaria 671/2021 exigem "
+                        "assinatura com certificado ICP-Brasil para a entrega "
+                        "oficial."
+                    )
                 )
+                return None
+            builder = (
+                pkcs7.PKCS7SignatureBuilder()
+                .set_data(conteudo_bruto)
+                .add_signer(certificado.cert, certificado.key, hashes.SHA256())
             )
-            return None
-        try:
-            from erpbrasil.assinatura import certificado as lib_certificado
-            from erpbrasil.assinatura.assinatura import Assinatura
-        except ImportError:
-            _logger.warning(
-                "erpbrasil.assinatura indisponível: AEJ gerado sem assinatura."
+            for cadeia in certificado.othercerts or []:
+                builder = builder.add_certificate(cadeia)
+            return builder.sign(
+                serialization.Encoding.DER,
+                [pkcs7.PKCS7Options.DetachedSignature, pkcs7.PKCS7Options.Binary],
             )
-            return None
-        try:
-            cert = lib_certificado.Certificado(
-                arquivo=base64.b64decode(certificado.file),
-                senha=certificado.password,
-            )
-            return Assinatura(cert).assina_pkcs7(conteudo_bruto)
         except Exception:
             _logger.exception("Falha ao assinar o AEJ do período %s", self.name)
             self.message_post(

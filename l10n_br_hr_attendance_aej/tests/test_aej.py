@@ -3,12 +3,24 @@
 """Testes do AEJ e do espelho de ponto (RP-20 a RP-23)."""
 
 import base64
-import sys
+import hashlib
+import shutil
+import subprocess
+import tempfile
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta
-from types import SimpleNamespace
+from pathlib import Path
 from unittest.mock import patch
 
-from odoo.exceptions import UserError
+from asn1crypto import cms
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.x509.oid import NameOID
+from erpbrasil.assinatura.certificado import Certificado
+
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 from odoo.tools import mute_logger
@@ -19,6 +31,46 @@ from ..models.l10n_br_hr_apuracao_periodo import L10nBrHrApuracaoPeriodo
 _LOGGER_PERIODO = (
     "odoo.addons.l10n_br_hr_attendance_aej.models.l10n_br_hr_apuracao_periodo"
 )
+_SENHA_PFX = "senha-de-teste"
+
+
+def _gera_pfx():
+    """PFX gerado na hora, como o A1 que a empresa cadastra: certificado do
+    titular emitido por uma AC de teste, que vai junto como cadeia."""
+    agora = datetime.utcnow()
+
+    def emite(nome_comum, chave, emissor, chave_emissor):
+        nome = x509.Name(
+            [
+                x509.NameAttribute(NameOID.COUNTRY_NAME, "BR"),
+                x509.NameAttribute(NameOID.COMMON_NAME, nome_comum),
+            ]
+        )
+        return (
+            x509.CertificateBuilder()
+            .subject_name(nome)
+            .issuer_name(emissor or nome)
+            .public_key(chave.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(agora - timedelta(days=1))
+            .not_valid_after(agora + timedelta(days=30))
+            .sign(chave_emissor, hashes.SHA256())
+        )
+
+    chave_ac = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    ac = emite("AC DE TESTE", chave_ac, None, chave_ac)
+    chave = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    certificado = emite(
+        "EMPRESA DE TESTE LTDA:12345678000195", chave, ac.subject, chave_ac
+    )
+    pfx = pkcs12.serialize_key_and_certificates(
+        b"aej",
+        chave,
+        certificado,
+        [ac],
+        serialization.BestAvailableEncryption(_SENHA_PFX.encode()),
+    )
+    return pfx, certificado, ac
 
 
 @tagged("post_install", "-at_install")
@@ -134,6 +186,76 @@ class TestAej(TransactionCase):
         if fechar:
             periodo.with_context(l10n_br_forcar_fechamento=True).action_fechar()
         return periodo
+
+    @contextmanager
+    def _certificado_da_empresa(self, **fronteira):
+        """Liga o certificado A1 cadastrado no l10n_br_fiscal_certificate.
+
+        A suíte desliga ``_certificado_ptrp``; aqui ele volta ao original e a
+        empresa ganha ``_get_br_ecertificate``, a fronteira com a localização
+        fiscal (fora das dependências deste módulo), que devolve o
+        ``Certificado`` da erpbrasil.assinatura já lido do PFX.
+        """
+        with (
+            patch.object(
+                type(self.env["l10n_br.hr.apuracao.periodo"]),
+                "_certificado_ptrp",
+                L10nBrHrApuracaoPeriodo._certificado_ptrp,
+            ),
+            patch.object(
+                type(self.env["res.company"]),
+                "_get_br_ecertificate",
+                create=True,
+                **fronteira,
+            ) as mock,
+        ):
+            yield mock
+
+    @staticmethod
+    def _certificado_lido(pfx):
+        """O que o l10n_br_fiscal_certificate devolve: o campo binário do
+        certificado (PFX em base64) aberto pela erpbrasil.assinatura."""
+
+        def ler(*_args, **_kwargs):
+            return Certificado(arquivo=base64.b64encode(pfx), senha=_SENHA_PFX)
+
+        return ler
+
+    def _confere_com_openssl(self, p7s, bruto):
+        """Segunda conferência, independente: ``openssl cms -verify``."""
+        openssl = shutil.which("openssl")
+        if not openssl:
+            return
+        with tempfile.TemporaryDirectory() as pasta:
+            assinatura = Path(pasta, "aej.txt.p7s")
+            assinatura.write_bytes(p7s)
+
+            def verifica(conteudo):
+                arquivo = Path(pasta, "conteudo.txt")
+                arquivo.write_bytes(conteudo)
+                return subprocess.run(
+                    [
+                        openssl,
+                        "cms",
+                        "-verify",
+                        "-binary",
+                        "-inform",
+                        "DER",
+                        "-in",
+                        str(assinatura),
+                        "-content",
+                        str(arquivo),
+                        "-noverify",
+                        "-out",
+                        str(Path(pasta, "saida.txt")),
+                    ],
+                    capture_output=True,
+                    check=False,
+                )
+
+            resultado = verifica(bruto)
+            self.assertEqual(resultado.returncode, 0, resultado.stderr)
+            self.assertNotEqual(verifica(bruto.replace(b"|", b";", 1)).returncode, 0)
 
     def _linhas(self, conteudo):
         return [
@@ -330,22 +452,63 @@ class TestAej(TransactionCase):
         mensagens = periodo.message_ids.mapped("body")
         self.assertTrue(any("SEM assinatura" in corpo for corpo in mensagens))
 
-    @mute_logger(
-        "odoo.addons.l10n_br_hr_attendance_aej.models.l10n_br_hr_apuracao_periodo"
-    )
+    @mute_logger(_LOGGER_PERIODO)
     def test_certificado_invalido_gera_sem_assinatura_e_avisa(self):
         """Certificado que não abre não pode impedir a geração do arquivo."""
         self._marcar(2, (8, 0), (12, 0), (13, 0), (17, 0))
         periodo = self._periodo()
-        falso = SimpleNamespace(file=base64.b64encode(b"nao e pkcs12"), password="x")
-        with patch.object(
-            type(periodo), "_certificado_ptrp", return_value=falso, create=True
+        with self._certificado_da_empresa(
+            side_effect=self._certificado_lido(b"nao e pkcs12")
         ):
             periodo.action_gerar_aej()
         self.assertTrue(periodo.aej_file)
         self.assertFalse(periodo.aej_p7s)
         mensagens = periodo.message_ids.mapped("body")
         self.assertTrue(any("Falha ao assinar" in corpo for corpo in mensagens))
+
+    def test_assinatura_cades_destacada_confere_com_o_aej(self):
+        """Art. 88, par. 2: o .p7s é CMS destacado e assina os bytes do AEJ."""
+        pfx, certificado, ac = _gera_pfx()
+        self._marcar(2, (8, 0), (12, 0), (13, 0), (17, 0))
+        periodo = self._periodo()
+        with self._certificado_da_empresa(side_effect=self._certificado_lido(pfx)):
+            periodo.action_gerar_aej()
+        mensagens = periodo.message_ids.mapped("body")
+        self.assertFalse(any("Falha ao assinar" in corpo for corpo in mensagens))
+        self.assertFalse(any("SEM assinatura" in corpo for corpo in mensagens))
+        self.assertTrue(periodo.aej_p7s, "AEJ sem assinatura com certificado válido")
+        self.assertEqual(periodo.aej_p7s_filename, periodo.aej_filename + ".p7s")
+        bruto = base64.b64decode(periodo.aej_file)
+        p7s = base64.b64decode(periodo.aej_p7s)
+
+        info = cms.ContentInfo.load(p7s, strict=True)
+        self.assertEqual(info["content_type"].native, "signed_data")
+        dados = info["content"]
+        # Destacado: o AEJ não vai dentro do .p7s, só a assinatura dele.
+        self.assertEqual(dados["encap_content_info"]["content_type"].native, "data")
+        self.assertIsNone(dados["encap_content_info"]["content"].native)
+        # Certificado do signatário e cadeia, para quem confere a assinatura.
+        embutidos = [escolha.chosen.dump() for escolha in dados["certificates"]]
+        self.assertIn(certificado.public_bytes(serialization.Encoding.DER), embutidos)
+        self.assertIn(ac.public_bytes(serialization.Encoding.DER), embutidos)
+        (assinante,) = dados["signer_infos"]
+        self.assertEqual(assinante["digest_algorithm"]["algorithm"].native, "sha256")
+        atributos = {
+            atributo["type"].native: atributo["values"][0].native
+            for atributo in assinante["signed_attrs"]
+        }
+        self.assertEqual(atributos["content_type"], "data")
+        self.assertEqual(atributos["message_digest"], hashlib.sha256(bruto).digest())
+        # RFC 5652, 5.4: a assinatura cobre o DER dos atributos assinados
+        # com a etiqueta de SET OF no lugar da [0] implícita.
+        assinados = b"\x31" + assinante["signed_attrs"].dump()[1:]
+        certificado.public_key().verify(
+            assinante["signature"].native,
+            assinados,
+            padding.PKCS1v15(),
+            hashes.SHA256(),
+        )
+        self._confere_com_openssl(p7s, bruto)
 
     def test_espelho_de_ponto_renderiza(self):
         self._marcar(2, (8, 0), (12, 0), (13, 0), (17, 0))
@@ -419,22 +582,20 @@ class TestAej(TransactionCase):
 
     def test_empresa_sem_certificado_nao_assina(self):
         periodo = self._periodo()
-        empresa = periodo.company_id
-        if "certificate_ecnpj_id" in empresa._fields:
-            empresa.write({"certificate_ecnpj_id": False, "certificate_ecpf_id": False})
-        # Chama o método original: a suíte substitui o da classe registrada.
-        self.assertIsNone(L10nBrHrApuracaoPeriodo._certificado_ptrp(periodo))
-
-    def test_sem_biblioteca_de_assinatura_gera_sem_assinatura(self):
-        periodo = self._periodo()
-        falso = SimpleNamespace(file=base64.b64encode(b"pkcs12"), password="x")
-        with (
-            patch.object(type(periodo), "_certificado_ptrp", return_value=falso),
-            patch.dict(sys.modules, {"erpbrasil.assinatura": None}),
-            self.assertLogs(_LOGGER_PERIODO, "WARNING") as registro,
+        if not hasattr(periodo.company_id, "_get_br_ecertificate"):
+            # Sem o l10n_br_fiscal_certificate não há de onde tirar o A1.
+            self.assertIsNone(L10nBrHrApuracaoPeriodo._certificado_ptrp(periodo))
+        # Com ele, empresa sem certificado (ou com certificado fora da
+        # validade) responde com ValidationError: o AEJ sai sem assinatura.
+        with self._certificado_da_empresa(
+            side_effect=ValidationError("Empresa sem certificado")
         ):
-            self.assertIsNone(periodo._assinar_aej(b"conteudo"))
-        self.assertIn("erpbrasil.assinatura indisponível", registro.output[0])
+            self.assertIsNone(periodo._certificado_ptrp())
+            periodo.action_gerar_aej()
+        self.assertTrue(periodo.aej_file)
+        self.assertFalse(periodo.aej_p7s)
+        mensagens = periodo.message_ids.mapped("body")
+        self.assertTrue(any("SEM assinatura" in corpo for corpo in mensagens))
 
     def test_acao_do_espelho_de_ponto(self):
         periodo = self._periodo()
