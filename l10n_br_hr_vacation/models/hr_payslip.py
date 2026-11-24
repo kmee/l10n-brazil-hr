@@ -391,8 +391,6 @@ class HrPayslip(models.Model):
             período aquisitivo vencido com saldo residual.
         """
         self.ensure_one()
-        if not self.employee_id or not self.date_to:
-            return []
         vacation_type = self.env.ref(
             "l10n_br_hr_vacation.leave_type_ferias", raise_if_not_found=False
         )
