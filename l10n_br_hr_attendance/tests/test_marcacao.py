@@ -153,3 +153,22 @@ class TestMarcacao(PontoCommon):
         )
         self.assertEqual(len(primeiro), 64)
         self.assertNotEqual(segundo, sem_encadeamento)
+
+    def test_nsr_zero_e_recusado(self):
+        """Anexo V: o NSR começa em 1."""
+        with self.assertRaisesRegex(ValidationError, "NSR deve iniciar em 1"):
+            self._criar_marcacao(0, self._utc(2026, 3, 2, 11, 0))
+
+    def test_marcacao_sem_momento_nao_tem_data(self):
+        """Na tela, antes de informar o momento, a data fica vazia."""
+        marcacao = self.env["l10n_br.hr.marcacao"].new(
+            {"employee_id": self.employee.id, "rep_id": self.rep.id}
+        )
+        self.assertFalse(marcacao.date_marcacao)
+
+    def test_conciliacao_nao_toca_marcacao_ja_vinculada(self):
+        marcacao = self._criar_marcacao(23, self._utc(2026, 3, 2, 11, 0))
+        outro = self.env["hr.employee"].create({"name": "Outro Funcionário"})
+        conciliadas = marcacao._conciliar_funcionario(outro)
+        self.assertFalse(conciliadas)
+        self.assertEqual(marcacao.employee_id, self.employee)

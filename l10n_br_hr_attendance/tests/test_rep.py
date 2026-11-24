@@ -78,3 +78,54 @@ class TestRep(PontoCommon):
     def test_atestado_vigente_nao_bloqueia(self):
         self.assertTrue(self.rep.atestado_valido)
         self.rep._check_atestado_vigente()
+
+    def test_busca_por_atestado_vigente(self):
+        """Painel de conformidade: filtrar REPs com atestado vencido."""
+        vencido = self.env["l10n_br.hr.rep"].create(
+            {
+                "name": "REP com atestado vencido",
+                "tipo": "rep_c",
+                "numero_fabricacao": "76543210987654321",
+                "cnpj_cpf": "12.345.678/0001-95",
+                "atestado_date_start": "2020-01-01",
+                "atestado_date_end": "2020-12-31",
+            }
+        )
+        sem_atestado = self.env["l10n_br.hr.rep"].create(
+            {
+                "name": "REP sem atestado",
+                "tipo": "rep_c",
+                "numero_fabricacao": "11111111111111111",
+                "cnpj_cpf": "12.345.678/0001-95",
+            }
+        )
+        reps = self.rep | vencido | sem_atestado
+        dominio = [("id", "in", reps.ids)]
+        Rep = self.env["l10n_br.hr.rep"]
+        self.assertEqual(
+            Rep.search(dominio + [("atestado_valido", "=", True)]), self.rep
+        )
+        self.assertEqual(
+            Rep.search(dominio + [("atestado_valido", "!=", True)]),
+            vencido | sem_atestado,
+        )
+        self.assertEqual(
+            Rep.search(dominio + [("atestado_valido", "=", False)]),
+            vencido | sem_atestado,
+        )
+
+    def test_busca_por_atestado_com_operador_nao_suportado(self):
+        with self.assertRaisesRegex(UserError, "Filtro não suportado"):
+            self.env["l10n_br.hr.rep"]._search_atestado_valido("in", [True])
+
+    def test_reserva_de_zero_nsr_nao_consome_a_sequencia(self):
+        self.assertEqual(self.rep._proximo_nsr(0), [])
+        self.assertEqual(self.rep.nsr_ultimo, 0)
+        self.assertEqual(self.rep._proximo_nsr(), [1])
+
+    def test_acao_lista_as_marcacoes_do_rep(self):
+        marcacao = self._criar_marcacao(1, self._utc(2026, 3, 2, 11, 0))
+        acao = self.rep.action_view_marcacoes()
+        self.assertEqual(acao["res_model"], "l10n_br.hr.marcacao")
+        self.assertEqual(acao["context"], {"default_rep_id": self.rep.id})
+        self.assertEqual(self.env[acao["res_model"]].search(acao["domain"]), marcacao)
