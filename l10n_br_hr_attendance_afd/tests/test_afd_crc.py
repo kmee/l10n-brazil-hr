@@ -37,3 +37,8 @@ class TestAfdCrc(BaseCase):
         base = "ABCDEFGH"
         linha = base + "0000"
         self.assertEqual(crc_da_linha(linha), crc16_hex(base))
+
+    def test_crc_reprova_linha_menor_que_o_proprio_campo(self):
+        """Linha sem espaço para dado e CRC não pode ser dada como íntegra."""
+        self.assertFalse(crc_confere(""))
+        self.assertFalse(crc_confere("2189"))
