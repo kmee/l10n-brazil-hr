@@ -51,6 +51,11 @@ class ESocialS2220(models.Model):
                 faltando.append(_("nome do médico emitente"))
             if not exame.l10n_br_exame_ids:
                 faltando.append(_("ao menos um exame complementar"))
+            # exMedOcup/respMonit is optional, but once it is sent nrCRM and
+            # ufCRM are required (leiaute S-1.3).
+            coordenador = exame.l10n_br_pcmso_id.medico_coordenador_id
+            if coordenador and not (coordenador.nr_oc and coordenador.uf_oc):
+                faltando.append(_("número e UF do CRM do médico coordenador do PCMSO"))
             if faltando:
                 raise UserError(
                     _("S-2220 de %(nome)s: informe %(campos)s antes de " "transmitir.")
@@ -85,12 +90,14 @@ class ESocialS2220(models.Model):
             dados["uf_crm"] = exame.l10n_br_uf_crm.upper()
         coordenador = exame.l10n_br_pcmso_id.medico_coordenador_id
         if coordenador:
-            dados["cpf_resp"] = self._so_digitos(coordenador.cpf)
-            dados["nm_resp"] = coordenador.name
-            if coordenador.nr_oc:
-                dados["nr_crm_resp"] = coordenador.nr_oc
-            if coordenador.uf_oc:
-                dados["uf_crm_resp"] = coordenador.uf_oc.upper()
+            dados.update(
+                {
+                    "cpf_resp": self._so_digitos(coordenador.cpf),
+                    "nm_resp": coordenador.name,
+                    "nr_crm_resp": coordenador.nr_oc,
+                    "uf_crm_resp": coordenador.uf_oc.upper(),
+                }
+            )
         return dados
 
     @api.model
