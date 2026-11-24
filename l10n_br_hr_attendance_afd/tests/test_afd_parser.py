@@ -153,3 +153,105 @@ class TestAfdParser(BaseCase):
         )
         bruto = conteudo.encode(afd_layout.ENCODING_AFD)
         self.assertIn("AÇÚCAR", bruto.decode(afd_layout.ENCODING_AFD))
+
+    def test_tipo_sem_leiaute_tem_tamanho_zero(self):
+        """O registro tipo 8 não existe no Anexo V."""
+        self.assertEqual(afd_layout.tamanho_registro("671", "8"), 0)
+
+    def test_linha_curta_nao_tem_tipo(self):
+        self.assertIsNone(afd_layout.identifica_tipo("000000001"))
+        self.assertEqual(afd_layout.identifica_tipo("0000000013"), "3")
+
+    def test_fatia_recusa_campo_fora_do_leiaute(self):
+        linha = fixtures.afd_671().split(afd_layout.TERMINADOR_LINHA)[1]
+        with self.assertRaisesRegex(KeyError, "pis"):
+            afd_layout.fatia(linha, "671", "3", "pis")
+
+    def test_valor_maior_que_o_campo_e_truncado(self):
+        """Item 7 do Anexo V: o registro tem tamanho fixo, o valor se ajusta."""
+        linha = afd_layout.monta_registro(
+            "671", "1", dict(fixtures.cabecalho_671(), razao_social="A" * 200)
+        )
+        self.assertEqual(len(linha), afd_layout.tamanho_registro("671", "1"))
+        self.assertEqual(afd_layout.fatia(linha, "671", "1", "razao_social"), "A" * 150)
+
+    def test_data_hora_sem_fuso_e_recusada(self):
+        with self.assertRaisesRegex(ValueError, "fora do formato do Anexo V"):
+            afd_parser._para_datetime_utc("2026-03-02T08:00:00")
+
+    def test_tipo_de_registro_desconhecido_vira_ocorrencia(self):
+        linhas = fixtures.afd_671().split(afd_layout.TERMINADOR_LINHA)
+        linhas.insert(2, "000000099X" + " " * 40)
+        linhas.insert(3, "0000")
+        resultado = afd_parser.ler_afd(afd_layout.TERMINADOR_LINHA.join(linhas))
+        desconhecidos = [
+            o for o in resultado.ocorrencias if o.codigo == "tipo_desconhecido"
+        ]
+        self.assertEqual([o.numero_linha for o in desconhecidos], [3, 4])
+        self.assertIn("'X'", desconhecidos[0].mensagem)
+        self.assertIn("None", desconhecidos[1].mensagem)
+        # As marcações íntegras continuam sendo lidas.
+        self.assertEqual(len(resultado.marcacoes), 4)
+
+    def test_registro_menor_que_o_leiaute_vira_ocorrencia(self):
+        linhas = fixtures.afd_671().split(afd_layout.TERMINADOR_LINHA)
+        linhas[1] = linhas[1][:30]
+        resultado = afd_parser.ler_afd(afd_layout.TERMINADOR_LINHA.join(linhas))
+        tamanho = [o for o in resultado.ocorrencias if o.codigo == "tamanho"]
+        self.assertEqual(len(tamanho), 1)
+        self.assertEqual(tamanho[0].numero_linha, 2)
+        self.assertIn("30 caracteres; o leiaute exige 50", tamanho[0].mensagem)
+        self.assertEqual(len(resultado.marcacoes), 3)
+
+    def test_arquivo_sem_trailer_vira_ocorrencia(self):
+        linhas = fixtures.afd_671().split(afd_layout.TERMINADOR_LINHA)
+        sem_trailer = [linha for linha in linhas if not linha.startswith("999999999")]
+        resultado = afd_parser.ler_afd(afd_layout.TERMINADOR_LINHA.join(sem_trailer))
+        self.assertEqual(resultado.trailer, {})
+        self.assertEqual([o.codigo for o in resultado.ocorrencias], ["trailer"])
+        self.assertEqual(
+            repr(resultado.ocorrencias[0]),
+            "<Ocorrencia linha=0 trailer: Arquivo sem registro trailer.>",
+        )
+        self.assertTrue(resultado.tem_erro)
+
+    def test_ajuste_de_relogio_fica_entre_os_eventos(self):
+        """Registro tipo 4 não é jornada, mas o Auditor-Fiscal pode pedi-lo."""
+        linhas = fixtures.afd_671().split(afd_layout.TERMINADOR_LINHA)
+        ajuste = fixtures.linha_com_crc(
+            "671",
+            "4",
+            {
+                "nsr": 5,
+                "tipo_registro": "4",
+                "data_hora_antes": "2026-03-02T21:00:00-0300",
+                "data_hora_ajustada": "2026-03-02T21:05:00-0300",
+                "cpf_responsavel": fixtures.CPF_EMPREGADO,
+            },
+        )
+        linhas.insert(5, ajuste)
+        resultado = afd_parser.ler_afd(afd_layout.TERMINADOR_LINHA.join(linhas))
+        self.assertFalse(resultado.ocorrencias, resultado.ocorrencias)
+        self.assertEqual(len(resultado.marcacoes), 4)
+        self.assertEqual(len(resultado.eventos), 1)
+        evento = resultado.eventos[0]
+        self.assertEqual(evento["nsr"], 5)
+        self.assertEqual(evento["tipo_registro"], "4")
+        self.assertEqual(evento["linha"], 6)
+        self.assertEqual(evento["conteudo"], ajuste)
+        # O NSR do evento entra na sequência: sem ele haveria lacuna.
+        self.assertEqual(resultado.lacunas_nsr, [])
+
+    def test_gerar_sem_literal_de_assinatura(self):
+        """Sem a assinatura em .p7s, o literal do Anexo V não é gravado."""
+        conteudo = afd_parser.gerar_afd(
+            fixtures.cabecalho_671(),
+            fixtures.marcacoes_671(),
+            assinatura_em_arquivo=False,
+        )
+        self.assertNotIn(afd_layout.ASSINATURA_EM_ARQUIVO, conteudo)
+        linhas = [linha for linha in conteudo.split("\r\n") if linha]
+        self.assertTrue(linhas[-1].startswith("999999999"))
+        resultado = afd_parser.ler_afd(conteudo)
+        self.assertEqual(resultado.assinatura, "")
+        self.assertFalse(resultado.ocorrencias, resultado.ocorrencias)
