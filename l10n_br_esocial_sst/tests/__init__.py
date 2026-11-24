@@ -6,3 +6,4 @@ from . import test_s2240
 from . import test_s2210
 from . import test_s2220
 from . import test_s2221
+from . import test_base_sst

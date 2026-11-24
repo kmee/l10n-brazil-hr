@@ -42,7 +42,7 @@ class TestS2220(EsocialSstCommon):
             [], limit=1
         )
 
-    def _aso_concluido(self, tipo="0"):
+    def _aso_pendente(self, tipo="0"):
         exame = self.env["hr.employee.medical.examination"].l10n_br_gerar_aso(
             self.employee, tipo, date=self.hoje
         )
@@ -63,6 +63,10 @@ class TestS2220(EsocialSstCommon):
                 "l10n_br_uf_crm": "MG",
             }
         )
+        return exame
+
+    def _aso_concluido(self, tipo="0"):
+        exame = self._aso_pendente(tipo)
         exame.to_done()
         return exame
 
@@ -138,3 +142,75 @@ class TestS2220(EsocialSstCommon):
         )
         exame.with_user(medico).to_done()
         self.assertTrue(exame.l10n_br_s2220_id)
+
+    def test_validacao_lista_os_campos_faltando(self):
+        exame = self.env["hr.employee.medical.examination"].create(
+            {"name": "ASO incompleto", "employee_id": self.employee.id}
+        )
+        evento = self.env["l10n_br.esocial.s2220"].gerar_para_exame(exame)
+        with self.assertRaises(UserError) as erro:
+            evento._validar_antes_do_envio()
+        mensagem = str(erro.exception)
+        for rotulo in (
+            "tipo de ASO",
+            "data do ASO",
+            "nome do médico emitente",
+            "ao menos um exame complementar",
+        ):
+            self.assertIn(rotulo, mensagem)
+
+    def test_concluir_aso_mantem_o_evento_ja_gerado(self):
+        exame = self._aso_pendente()
+        acao = exame.action_gerar_s2220()
+        evento = exame.l10n_br_s2220_id
+        self.assertEqual(acao["res_id"], evento.id)
+        exame.to_done()
+        self.assertEqual(exame.l10n_br_s2220_id, evento)
+        self.assertEqual(
+            self.env["l10n_br.esocial.s2220"].search_count(
+                [("examination_id", "=", exame.id)]
+            ),
+            1,
+        )
+
+    @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
+    @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
+    def test_sem_resultado_crm_nem_coordenador(self):
+        """resAso, nrCRM, ufCRM e respMonit são opcionais no leiaute."""
+        exame = self._aso_pendente()
+        exame.write(
+            {
+                "l10n_br_resultado": False,
+                "l10n_br_crm": False,
+                "l10n_br_uf_crm": False,
+                "l10n_br_pcmso_id": False,
+            }
+        )
+        exame.action_gerar_s2220()
+        evento = exame.l10n_br_s2220_id
+        dados = evento._to_esociallib_dict()
+        self.assertEqual(dados["nm_med"], "Dr. Examinador")
+        for chave in ("res_aso", "nr_crm", "uf_crm", "cpf_resp", "nm_resp"):
+            self.assertNotIn(chave, dados)
+        xml = evento._gerar_xml()
+        root = etree.fromstring(xml.encode("utf-8") if isinstance(xml, str) else xml)
+        ns = {"e": NS_2220}
+        self.assertIsNone(root.find(".//e:aso/e:resAso", ns))
+        self.assertIsNone(root.find(".//e:medico/e:nrCRM", ns))
+        self.assertIsNone(root.find(".//e:respMonit", ns))
+
+    @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
+    @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
+    def test_gerar_evento_valida_antes(self):
+        incompleto = self.env["hr.employee.medical.examination"].create(
+            {"name": "ASO incompleto", "employee_id": self.employee.id}
+        )
+        evento = self.env["l10n_br.esocial.s2220"].gerar_para_exame(incompleto)
+        with self.assertRaisesRegex(UserError, "exame complementar"):
+            evento.action_gerar_evento()
+        self.assertFalse(evento.evento_id)
+        exame = self._aso_concluido()
+        registro = exame.l10n_br_s2220_id.action_gerar_evento()
+        self.assertEqual(registro.tipo, "S-2220")
+        self.assertTrue(registro.id_evento)
+        self.assertEqual(exame.l10n_br_s2220_id.evento_id, registro)
