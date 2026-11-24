@@ -317,3 +317,34 @@ class TestApuracao(TransactionCase):
         _periodo, apuracao = self._apurar_dia(2)
         apuracao.apurar()
         self.assertEqual(len(apuracao.attendance_ids), 2)
+
+    def test_nome_exibido_identifica_o_dia(self):
+        """O nome aparece no campo do dia na marcação e na navegação."""
+        _periodo, apuracao = self._apurar_dia(2)
+        self.assertEqual(apuracao.display_name, "Ana Apuração - 2026-03-02")
+
+    def test_busca_pelo_nome_exibido(self):
+        """Busca pelo nome (campo many2one, filtro) filtra pelo funcionário
+        e pelo dia, em vez de ser ignorada."""
+        _periodo, apuracao = self._apurar_dia(2)
+        _periodo, outro_dia = self._apurar_dia(3)
+        Dia = self.env["l10n_br.hr.apuracao.dia"]
+        self.assertEqual(
+            Dia.search([("display_name", "ilike", "Ana Apura")]),
+            apuracao | outro_dia,
+        )
+        self.assertEqual(
+            Dia.search([("display_name", "ilike", "2026-03-03")]), outro_dia
+        )
+        self.assertEqual(
+            [nome for _id, nome in Dia.name_search("Ana Apura")],
+            ["Ana Apuração - 2026-03-03", "Ana Apuração - 2026-03-02"],
+        )
+
+    def test_codigo_horario_contratual_do_dia(self):
+        """Código do horário contratual do registro 04 do AEJ (Anexo VI da
+        Portaria MTP 671/2021): horários locais da jornada prevista."""
+        _periodo, segunda = self._apurar_dia(2)
+        self.assertEqual(segunda._codigo_horario_contratual(), "H0800120013001700")
+        _periodo, domingo = self._apurar_dia(1)
+        self.assertEqual(domingo._codigo_horario_contratual(), "")
