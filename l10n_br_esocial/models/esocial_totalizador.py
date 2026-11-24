@@ -3,7 +3,7 @@
 
 import logging
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 
 from .retorno_totalizadores import parse_totalizadores
 
@@ -205,32 +205,6 @@ class ESocialTotalizador(models.Model):
             if digitos == cpf:
                 return employee
         return employees
-
-    @api.model
-    def total_por_grupo(self, dominio, grupo, codigo=None, descricao=None):
-        """Soma os valores de um grupo nos totalizadores que casam o domínio.
-
-        É o acesso usado pela conferência da competência: sempre parte do que o
-        governo devolveu, nunca de recálculo local.
-        """
-        dominio_linha = [("totalizador_id", "in", self.search(dominio).ids)]
-        dominio_linha.append(("grupo", "=", grupo))
-        if codigo is not None:
-            dominio_linha.append(("codigo", "=", codigo))
-        if descricao is not None:
-            dominio_linha.append(("descricao", "=", descricao))
-        linhas = self.env["l10n_br.esocial.totalizador.linha"].search(dominio_linha)
-        return sum(linhas.mapped("valor"))
-
-    def action_ver_linhas(self):
-        self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Valores do Totalizador"),
-            "res_model": "l10n_br.esocial.totalizador.linha",
-            "view_mode": "list",
-            "domain": [("totalizador_id", "=", self.id)],
-        }
 
 
 class ESocialTotalizadorLinha(models.Model):

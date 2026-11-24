@@ -4,6 +4,8 @@
 import base64
 import logging
 
+from esociallib import assinar, consultar_lote, enviar_lote
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
@@ -24,14 +26,6 @@ PERIODIC_S1_TYPES = frozenset(
         "S-1299",
     }
 )
-
-try:
-    from esociallib import assinar, consultar_lote, enviar_lote
-except ImportError:
-    assinar = None
-    consultar_lote = None
-    enviar_lote = None
-    _logger.warning("esociallib not installed. eSocial transmission disabled.")
 
 
 class ESocialLote(models.Model):
@@ -109,14 +103,19 @@ class ESocialLote(models.Model):
             rec.state = "draft"
 
     def _get_certificate(self):
-        """Get A1 certificate from l10n_br_fiscal_certificate if available."""
+        """Return the A1 certificate as esociallib takes it (PKCS#12, password).
+
+        ``res.company._get_br_ecertificate`` (l10n_br_fiscal_certificate)
+        returns an ``erpbrasil.assinatura.certificado.Certificado``, which keeps
+        the decoded PKCS#12 in ``_arquivo`` and the password in ``_senha``, and
+        raises when the company has no valid certificate. esociallib builds a
+        new ``Certificado`` from what it gets, and erpbrasil reads a PKCS#12
+        given as bytes as base64, so the file goes back base64 encoded.
+        """
         company = self.company_id
         if hasattr(company, "_get_br_ecertificate"):
             cert = company._get_br_ecertificate()
-            if cert:
-                pfx_data = base64.b64decode(cert.file)
-                senha = cert.password
-                return pfx_data, senha
+            return base64.b64encode(cert._arquivo), cert._senha
         raise UserError(
             _(
                 "Certificado digital A1 não configurado para a empresa "
@@ -242,12 +241,20 @@ class ESocialLote(models.Model):
         tp_amb = self.company_id.l10n_br_esocial_tp_amb or "2"
         environment = "restricted" if tp_amb == "2" else "production"
 
-        resultado = consultar_lote(
-            self.protocolo,
-            pfx_data,
-            senha,
-            environment=environment,
-        )
+        # Same contract as action_transmitir: a communication failure becomes
+        # a UserError before anything is written on the lote or its events.
+        try:
+            resultado = consultar_lote(
+                self.protocolo,
+                pfx_data,
+                senha,
+                environment=environment,
+            )
+        except Exception as exc:
+            _logger.exception("Erro ao consultar lote eSocial %s", self.id)
+            raise UserError(
+                _("Falha na consulta do lote: %(erro)s") % {"erro": exc}
+            ) from exc
 
         if resultado.status == "processado":
             self.state = "done"

@@ -1,10 +1,19 @@
 # Copyright 2024 KMEE
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+import base64
 from contextlib import ExitStack
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.x509.oid import NameOID
+from erpbrasil.assinatura.certificado import Certificado
 from esociallib.exceptions import EsocialTransmissionError
+from lxml import etree
 
 from odoo.exceptions import UserError
 
@@ -17,6 +26,7 @@ from .common import (
 
 LOTE_MODULE = "odoo.addons.l10n_br_esocial.models.esocial_lote"
 PROTOCOLO = "1.2.202403.0000000000000000001"
+NS_DS = "{http://www.w3.org/2000/09/xmldsig#}"
 
 
 def _xml_evento(id_evento):
@@ -24,6 +34,33 @@ def _xml_evento(id_evento):
         '<eSocial xmlns="http://www.esocial.gov.br/schema/evt/evtRemun/v_S_01_03_00">'
         f'<evtRemun Id="{id_evento}"/></eSocial>'
     )
+
+
+def _pfx_autoassinado(senha):
+    """Certificado A1 autoassinado gerado no teste (PKCS#12 e o X.509)."""
+    chave = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    nome = x509.Name(
+        [x509.NameAttribute(NameOID.COMMON_NAME, "Certificado de Teste eSocial")]
+    )
+    agora = datetime.now(timezone.utc)
+    certificado = (
+        x509.CertificateBuilder()
+        .subject_name(nome)
+        .issuer_name(nome)
+        .public_key(chave.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(agora - timedelta(days=1))
+        .not_valid_after(agora + timedelta(days=30))
+        .sign(chave, hashes.SHA256())
+    )
+    pfx = pkcs12.serialize_key_and_certificates(
+        b"teste",
+        chave,
+        certificado,
+        None,
+        serialization.BestAvailableEncryption(senha.encode()),
+    )
+    return pfx, certificado
 
 
 def _assinar(xml, pfx_data, senha):
@@ -196,6 +233,48 @@ class TestESocialLoteTransmissao(ESocialCicloCommon):
                 lote.action_consultar()
         self.assertIn("esociallib não está instalada", str(erro.exception))
 
+    def test_transmitir_com_o_certificado_da_empresa(self):
+        """O certificado do l10n_br_fiscal_certificate chega à esociallib.
+
+        ``res.company._get_br_ecertificate`` devolve um
+        ``erpbrasil.assinatura.certificado.Certificado``. O evento é assinado
+        de verdade pela esociallib e o envio recebe o PKCS#12 e a senha que
+        reabrem o mesmo certificado.
+        """
+        senha = "senha-de-teste"
+        pfx, cert_x509 = _pfx_autoassinado(senha)
+        certificado = Certificado(arquivo=base64.b64encode(pfx), senha=senha)
+        evento = self._evento("ID1")
+        lote = self._lote(evento)
+        enviar = mock.Mock(return_value=PROTOCOLO)
+        with (
+            mock.patch.object(
+                type(self.company),
+                "_get_br_ecertificate",
+                create=True,
+                return_value=certificado,
+            ),
+            mock.patch(f"{LOTE_MODULE}.enviar_lote", enviar),
+        ):
+            lote.action_transmitir()
+
+        (xml_assinado,), cert_pfx, cert_password = enviar.call_args.args
+        reaberto = Certificado(arquivo=cert_pfx, senha=cert_password)
+        self.assertEqual(reaberto.cert, cert_x509)
+        self.assertEqual(lote.state, "sent")
+        self.assertEqual(evento.xml_envio, xml_assinado)
+
+        # Assinatura com a chave do certificado da empresa.
+        raiz = etree.fromstring(xml_assinado.encode())
+        der = cert_x509.public_bytes(serialization.Encoding.DER)
+        x509_xml = raiz.find(f".//{NS_DS}X509Certificate").text
+        self.assertEqual(base64.b64decode(x509_xml), der)
+        signed_info = etree.tostring(raiz.find(f".//{NS_DS}SignedInfo"), method="c14n")
+        assinatura = base64.b64decode(raiz.find(f".//{NS_DS}SignatureValue").text)
+        cert_x509.public_key().verify(
+            assinatura, signed_info, padding.PKCS1v15(), hashes.SHA1()
+        )
+
     def test_certificado_nao_configurado(self):
         if hasattr(self.company, "_get_br_ecertificate"):
             self.skipTest("l10n_br_fiscal_certificate instalado")
@@ -297,6 +376,20 @@ class TestESocialLoteTransmissao(ESocialCicloCommon):
         self.assertEqual(evento.state, "sent")
         self.assertFalse(evento.ocorrencia_ids)
         self.assertEqual(acao["params"]["type"], "danger")
+
+    def test_consulta_com_erro_de_comunicacao_nao_grava_nada(self):
+        """Falha no webservice vira UserError e o lote segue enviado."""
+        lote, evento = self._lote_enviado("ID1")
+        consultar = mock.Mock(side_effect=EsocialTransmissionError("tempo esgotado"))
+        with self._webservice(consultar_lote=consultar):
+            with self.assertRaises(UserError) as erro:
+                lote.action_consultar()
+        self.assertIn("Falha na consulta do lote", str(erro.exception))
+        self.assertIn("tempo esgotado", str(erro.exception))
+        self.assertEqual(lote.state, "sent")
+        self.assertEqual(lote.protocolo, PROTOCOLO)
+        self.assertEqual(evento.state, "sent")
+        self.assertFalse(evento.ocorrencia_ids)
 
     def test_consulta_exige_protocolo(self):
         lote = self._lote(self._evento("ID1", state="sent"), state="sent")
