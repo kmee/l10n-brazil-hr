@@ -109,14 +109,19 @@ class ESocialLote(models.Model):
             rec.state = "draft"
 
     def _get_certificate(self):
-        """Get A1 certificate from l10n_br_fiscal_certificate if available."""
+        """Return the A1 certificate as esociallib takes it (PKCS#12, password).
+
+        ``res.company._get_br_ecertificate`` (l10n_br_fiscal_certificate)
+        returns an ``erpbrasil.assinatura.certificado.Certificado``, which keeps
+        the decoded PKCS#12 in ``_arquivo`` and the password in ``_senha``, and
+        raises when the company has no valid certificate. esociallib builds a
+        new ``Certificado`` from what it gets, and erpbrasil reads a PKCS#12
+        given as bytes as base64, so the file goes back base64 encoded.
+        """
         company = self.company_id
         if hasattr(company, "_get_br_ecertificate"):
             cert = company._get_br_ecertificate()
-            if cert:
-                pfx_data = base64.b64decode(cert.file)
-                senha = cert.password
-                return pfx_data, senha
+            return base64.b64encode(cert._arquivo), cert._senha
         raise UserError(
             _(
                 "Certificado digital A1 não configurado para a empresa "
