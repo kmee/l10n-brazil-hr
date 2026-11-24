@@ -4,8 +4,8 @@
 from dateutil.relativedelta import relativedelta
 
 from odoo import fields
-from odoo.exceptions import UserError
-from odoo.tests import tagged
+from odoo.exceptions import UserError, ValidationError
+from odoo.tests import Form, tagged
 
 from odoo.addons.l10n_br_hr_sst.tests.common import SstCommon
 
@@ -194,3 +194,84 @@ class TestSstEpi(SstCommon):
         mensagens_antes = len(self.ca_vencido.message_ids)
         self.env["l10n_br.sst.ca"].cron_alerta_vencimento()
         self.assertGreater(len(self.ca_vencido.message_ids), mensagens_antes)
+
+    def test_cron_ignora_ca_a_vencer_sem_entrega_valida(self):
+        """Sem entrega válida dependendo do CA, não há o que alertar."""
+        ca = self.env["l10n_br.sst.ca"].create(
+            {
+                "numero": "66666",
+                "descricao_epi": "Capacete de segurança",
+                "validade": self.hoje + relativedelta(days=5),
+            }
+        )
+        self.assertEqual(ca.state, "a_vencer")
+        mensagens_antes = len(ca.message_ids)
+        self.env["l10n_br.sst.ca"].cron_alerta_vencimento()
+        self.assertEqual(len(ca.message_ids), mensagens_antes)
+
+    def test_ca_exige_numero_preenchido(self):
+        with self.assertRaisesRegex(ValidationError, "número do Certificado"):
+            self.env["l10n_br.sst.ca"].create(
+                {
+                    "numero": "   ",
+                    "descricao_epi": "Bota de segurança",
+                    "validade": self.hoje,
+                }
+            )
+
+    # Produto e entrega a partir do produto
+
+    def test_produto_com_ca_vira_epi(self):
+        """Equipamento com CA é, por definição, EPI (NR-6)."""
+        with Form(self.env["product.template"]) as produto:
+            produto.name = "Luva nitrílica"
+            # A aba do CA só aparece para equipamento pessoal.
+            produto.is_personal_equipment = True
+            self.assertFalse(produto.is_ppe)
+            produto.l10n_br_sst_ca_id = self.ca_valido
+            self.assertTrue(produto.is_ppe)
+        self.assertEqual(
+            produto.record.l10n_br_sst_ca_validade, self.ca_valido.validade
+        )
+
+    def test_entrega_herda_o_ca_do_produto(self):
+        entrega = self.env["hr.personal.equipment"].new(
+            {"employee_id": self.employee.id, "product_id": self.produto.id}
+        )
+        entrega._onchange_product_ca()
+        self.assertEqual(entrega.l10n_br_sst_ca_id, self.ca_valido)
+        self.assertEqual(entrega.certification, "12345")
+
+    # Trabalhador
+
+    def test_contagem_de_epis_validos_do_trabalhador(self):
+        entrega = self._cria_entrega()
+        self.assertEqual(self.employee.l10n_br_sst_epi_count, 0)
+        entrega.validate_allocation()
+        self.assertEqual(self.employee.l10n_br_sst_epi_count, 1)
+        acao = self.employee.action_view_l10n_br_sst_epi()
+        self.assertEqual(acao["res_model"], "hr.personal.equipment")
+        self.assertEqual(acao["domain"], [("employee_id", "=", self.employee.id)])
+        self.assertEqual(
+            self.env[acao["res_model"]].search(acao["domain"]),
+            self.employee.l10n_br_sst_epi_ids,
+        )
+
+    def test_ficha_de_epi_lista_as_entregas(self):
+        entrega = self._cria_entrega()
+        entrega.validate_allocation()
+        # Sem o assistente de layout do documento, que o Odoo abre para o
+        # administrador quando a empresa ainda não escolheu um.
+        acao = self.employee.with_context(
+            discard_logo_check=True
+        ).action_l10n_br_sst_ficha_epi()
+        self.assertEqual(acao["type"], "ir.actions.report")
+        self.assertEqual(acao["report_name"], "l10n_br_hr_sst_epi.report_ficha_epi")
+        self.assertEqual(acao["context"]["active_ids"], self.employee.ids)
+        html = self.env["ir.actions.report"]._render_qweb_html(
+            acao["report_name"], self.employee.ids
+        )[0]
+        texto = html.decode() if isinstance(html, bytes) else html
+        self.assertIn("Ficha de Controle de Entrega de EPI", texto)
+        self.assertIn(self.employee.name, texto)
+        self.assertIn("12345", texto)
