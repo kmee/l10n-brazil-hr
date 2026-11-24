@@ -54,10 +54,19 @@ class ESocialBaseSst(models.AbstractModel):
         matricula = self.employee_id.l10n_br_esocial_matricula
         if matricula:
             dados["matricula"] = matricula
-        else:
-            categoria = self.employee_id.l10n_br_esocial_categoria_id
-            if categoria:
-                dados["cod_categ"] = categoria.codigo
+            return dados
+        # T_ideVinculo_sst/codCateg: required and exclusive when there is no
+        # matricula (leiaute S-1.3).
+        categoria = self.employee_id.l10n_br_esocial_categoria_id
+        if not categoria:
+            raise UserError(
+                _(
+                    "%(tipo)s de %(nome)s: o trabalhador não tem a matrícula do "
+                    "eSocial nem a categoria, e o evento exige uma das duas."
+                )
+                % {"tipo": self._get_event_type(), "nome": self.employee_id.name}
+            )
+        dados["cod_categ"] = categoria.codigo
         return dados
 
     def _get_dados_comuns(self):
