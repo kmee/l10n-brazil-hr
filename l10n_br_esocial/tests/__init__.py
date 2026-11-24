@@ -16,3 +16,6 @@ from . import test_s3000_exclusao
 from . import test_totalizadores
 from . import test_seguranca
 from . import test_migracao_aso
+from . import test_esocial_lote
+from . import test_retorno_totalizadores
+from . import test_base_intermediario
