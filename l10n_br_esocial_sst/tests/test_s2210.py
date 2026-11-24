@@ -55,6 +55,7 @@ class TestS2210(EsocialSstCommon):
                 "uf_oc_emit": "MG",
                 "houve_afastamento": True,
                 "ind_afast": "S",
+                "ultimo_dia_trabalhado": date(2026, 6, 10),
             }
         )
         cls.acidente.action_registrar()
@@ -277,11 +278,23 @@ class TestS2210(EsocialSstCommon):
         self.assertEqual(evento._to_esociallib_dict()["houve_afast"], "N")
         self.assertEqual(self._xml(evento).find(".//e:cat/e:houveAfast", ns).text, "N")
 
+    def test_ultimo_dia_trabalhado_obrigatorio_desde_16_01_2023(self):
+        """cat/ultDiaTrab é obrigatório se dtAcid >= 2023-01-16."""
+        evento = self.cat.action_gerar_s2210()
+        self.acidente.ultimo_dia_trabalhado = False
+        with self.assertRaisesRegex(UserError, "último dia trabalhado"):
+            evento._validar_antes_do_envio()
+        self.acidente.date_acidente = date(2023, 1, 16)
+        with self.assertRaisesRegex(UserError, "último dia trabalhado"):
+            evento._validar_antes_do_envio()
+        self.acidente.date_acidente = date(2023, 1, 15)
+        self.assertNotIn("ult_dia_trab", evento._to_esociallib_dict())
+
     @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
     @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
     def test_ultimo_dia_trabalhado(self):
         evento = self.cat.action_gerar_s2210()
-        self.assertNotIn("ult_dia_trab", evento._to_esociallib_dict())
+        self.assertEqual(evento._to_esociallib_dict()["ult_dia_trab"], "2026-06-10")
         self.acidente.ultimo_dia_trabalhado = date(2026, 6, 9)
         self.assertEqual(evento._to_esociallib_dict()["ult_dia_trab"], "2026-06-09")
         root = self._xml(evento)

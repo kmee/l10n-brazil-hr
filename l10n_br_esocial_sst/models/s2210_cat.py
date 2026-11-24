@@ -12,6 +12,8 @@ TIPO_ACIDENTE_TRAJETO = "3"
 # Leiaute S-1.3, hrsTrabAntesAcid: obrigatório no acidente típico e, a partir
 # desta data, no de trajeto.
 INICIO_HRS_TRAB_TRAJETO = date(2022, 7, 20)
+# Leiaute S-1.3, ultDiaTrab and houveAfast: required from this accident date.
+INICIO_ULT_DIA_TRAB = date(2023, 1, 16)
 
 
 class ESocialS2210(models.Model):
@@ -78,6 +80,11 @@ class ESocialS2210(models.Model):
                 faltando.append(_("agente causador"))
             if not acidente.dsc_lograd or not acidente.nr_lograd:
                 faltando.append(_("logradouro e número do local do acidente"))
+            if (
+                acidente.date_acidente >= INICIO_ULT_DIA_TRAB
+                and not acidente.ultimo_dia_trabalhado
+            ):
+                faltando.append(_("último dia trabalhado"))
             if not acidente.date_atendimento:
                 faltando.append(_("data do atendimento"))
             if not acidente.hora_atendimento:
