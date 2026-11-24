@@ -5,7 +5,7 @@ import unittest
 
 from lxml import etree
 
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import tagged
 from odoo.tools import mute_logger
 
@@ -46,6 +46,24 @@ class TestS2221(EsocialSstCommon):
         self.assertEqual(dados["cnpj_lab"], "12345678000199")
         self.assertEqual(dados["cod_seq_exame"], "AB123456789")
         self.assertEqual(dados["matricula"], "MAT001")
+
+    def test_nome_do_evento(self):
+        evento = self._cria_evento()
+        self.assertEqual(evento.name, f"Trabalhador SST - {self.hoje}")
+
+    def test_exige_matricula(self):
+        """O ideVinculo do S-2221 não aceita a categoria no lugar da matrícula."""
+        evento = self._cria_evento()
+        self.employee.l10n_br_esocial_matricula = False
+        with self.assertRaisesRegex(UserError, "matrícula"):
+            evento._to_esociallib_dict()
+
+    def test_crm_opcional(self):
+        evento = self._cria_evento(nr_crm=False, uf_crm=False)
+        dados = evento._to_esociallib_dict()
+        self.assertEqual(dados["nm_med"], "Dr. Toxicologista")
+        self.assertNotIn("nr_crm", dados)
+        self.assertNotIn("uf_crm", dados)
 
     @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
     @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
