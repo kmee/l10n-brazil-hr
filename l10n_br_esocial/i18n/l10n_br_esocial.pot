@@ -590,13 +590,6 @@ msgstr ""
 
 #. module: l10n_br_esocial
 #. odoo-python
-#: code:addons/l10n_br_esocial/models/intermediarios/base_intermediario.py:0
-msgid ""
-"A biblioteca esociallib não está instalada. Execute: pip install esociallib"
-msgstr ""
-
-#. module: l10n_br_esocial
-#. odoo-python
 #: code:addons/l10n_br_esocial/models/intermediarios/s1299_fechamento.py:0
 msgid ""
 "A competência %(per)s já está fechada (S-1299 aceito, recibo %(recibo)s). "
@@ -2334,6 +2327,12 @@ msgid "Falha na assinatura/transmissão do lote: %(erro)s"
 msgstr ""
 
 #. module: l10n_br_esocial
+#. odoo-python
+#: code:addons/l10n_br_esocial/models/esocial_lote.py:0
+msgid "Falha na consulta do lote: %(erro)s"
+msgstr ""
+
+#. module: l10n_br_esocial
 #: model:ir.model.fields,help:l10n_br_esocial.field_l10n_br_esocial_conferencia_linha__comparativo
 msgid ""
 "Falso nos indicadores que só existem do lado do governo — eles são "
@@ -3548,15 +3547,6 @@ msgstr ""
 #. module: l10n_br_esocial
 #: model:ir.model.fields.selection,name:l10n_br_esocial.selection__l10n_br_esocial_conferencia__state__draft
 msgid "Não apurada"
-msgstr ""
-
-#. module: l10n_br_esocial
-#. odoo-python
-#: code:addons/l10n_br_esocial/models/intermediarios/base_intermediario.py:0
-msgid ""
-"Não foi possível gerar o evento %(tipo)s: a esociallib não possui um builder"
-" registrado para este evento e os schemas XSD não estão disponíveis para "
-"validação."
 msgstr ""
 
 #. module: l10n_br_esocial
@@ -4913,12 +4903,6 @@ msgstr ""
 #. module: l10n_br_esocial
 #: model_terms:ir.ui.view,arch_db:l10n_br_esocial.view_esocial_totalizador_form
 msgid "Valores Apurados"
-msgstr ""
-
-#. module: l10n_br_esocial
-#. odoo-python
-#: code:addons/l10n_br_esocial/models/esocial_totalizador.py:0
-msgid "Valores do Totalizador"
 msgstr ""
 
 #. module: l10n_br_esocial
