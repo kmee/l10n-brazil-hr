@@ -147,16 +147,6 @@ def _parse_s5001(evt, totalizador):
                             **contexto_categ,
                         )
                     )
-                elif nome_base == "basePisPasep":
-                    totalizador.linhas.append(
-                        LinhaTotalizador(
-                            grupo="base_pis_pasep",
-                            descricao="valor",
-                            valor=_valor(_texto(base, "valor")),
-                            ind_13=_texto(base, "ind13"),
-                            **contexto_categ,
-                        )
-                    )
                 elif nome_base == "calcTerc":
                     tp_cr = _texto(base, "tpCR")
                     for nome, valor in _valores_do_grupo(base):
@@ -169,6 +159,37 @@ def _parse_s5001(evt, totalizador):
                                 **contexto_categ,
                             )
                         )
+
+    # PIS/PASEP base has its own group in S-1.3, outside infoCp:
+    # infoPisPasep/ideEstab/infoCategPisPasep/infoBasePisPasep.
+    for ide_estab in evt.iter():
+        if _nome(ide_estab) != "ideEstab":
+            continue
+        contexto = {
+            "tp_insc": _texto(ide_estab, "tpInsc"),
+            "nr_insc": _texto(ide_estab, "nrInsc"),
+        }
+        for categ in ide_estab.iter():
+            if _nome(categ) != "infoCategPisPasep":
+                continue
+            contexto_categ = dict(
+                contexto,
+                matricula=_texto(categ, "matricula"),
+                cod_categ=_texto(categ, "codCateg"),
+            )
+            for base in categ.iter():
+                if _nome(base) != "infoBasePisPasep":
+                    continue
+                totalizador.linhas.append(
+                    LinhaTotalizador(
+                        grupo="base_pis_pasep",
+                        codigo=_texto(base, "tpValorPisPasep"),
+                        descricao="valorPisPasep",
+                        valor=_valor(_texto(base, "valorPisPasep")),
+                        ind_13=_texto(base, "ind13"),
+                        **contexto_categ,
+                    )
+                )
 
 
 def _linhas_consolidadas_s5011(evt, totalizador):

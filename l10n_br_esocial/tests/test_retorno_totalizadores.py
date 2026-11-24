@@ -6,6 +6,7 @@ from odoo.tests import tagged
 
 from ..models.retorno_totalizadores import parse_totalizadores
 from .common import (
+    RECIBO_S1200,
     RECIBO_S1210,
     RECIBO_S1299,
     ESocialCicloCommon,
@@ -178,6 +179,40 @@ class TestRetornoTotalizadores(ESocialCicloCommon):
             {linha.descricao: linha.valor for linha in diario},
             {"vlrPagoDia": 500.0, "vlrCRDia": 125.0},
         )
+
+    def test_s5001_le_a_base_do_pis_pasep(self):
+        """S-1.3: base do PIS/PASEP em infoPisPasep, fora de infoCp.
+
+        Caminho do binding evt_bases_trab: infoPisPasep/ideEstab/
+        infoCategPisPasep/infoBasePisPasep, valor em valorPisPasep.
+        """
+        retorno = retorno_s5001(self.cpf_employee).replace(
+            "</infoCp>",
+            "</infoCp>"
+            "<infoPisPasep><ideEstab>"
+            "<tpInsc>1</tpInsc><nrInsc>02546716000146</nrInsc>"
+            "<infoCategPisPasep>"
+            "<matricula>MAT001</matricula><codCateg>101</codCateg>"
+            "<infoBasePisPasep><ind13>0</ind13>"
+            "<tpValorPisPasep>11</tpValorPisPasep>"
+            "<valorPisPasep>3000.00</valorPisPasep></infoBasePisPasep>"
+            "</infoCategPisPasep>"
+            "</ideEstab></infoPisPasep>",
+        )
+        evento = self._totalizadores("S-1200", retorno, recibo=RECIBO_S1200)
+        base = evento.totalizador_ids.linha_ids.filtered(
+            lambda linha: linha.grupo == "base_pis_pasep"
+        )
+        self.assertEqual(len(base), 1)
+        self.assertEqual(base.codigo, "11")
+        self.assertEqual(base.descricao, "valorPisPasep")
+        self.assertAlmostEqual(base.valor, 3000.0, places=2)
+        self.assertEqual(base.ind_13, "0")
+        self.assertEqual(base.matricula, "MAT001")
+        self.assertEqual(base.cod_categ, "101")
+        self.assertEqual(base.tp_insc, "1")
+        self.assertEqual(base.nr_insc, "02546716000146")
+        self.assertFalse(base.cod_lotacao)
 
     def test_s5011_por_estabelecimento_e_13(self):
         evento = self._totalizadores(
