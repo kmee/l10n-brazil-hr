@@ -267,6 +267,18 @@ class TestS2210(EsocialSstCommon):
 
     @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
     @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
+    def test_houve_afastamento_sempre_informado(self):
+        """cat/houveAfast é obrigatório a partir de 16/01/2023: vai S ou N."""
+        evento = self.cat.action_gerar_s2210()
+        ns = {"e": NS_2210}
+        self.assertEqual(evento._to_esociallib_dict()["houve_afast"], "S")
+        self.assertEqual(self._xml(evento).find(".//e:cat/e:houveAfast", ns).text, "S")
+        self.acidente.write({"houve_afastamento": False, "ind_afast": "N"})
+        self.assertEqual(evento._to_esociallib_dict()["houve_afast"], "N")
+        self.assertEqual(self._xml(evento).find(".//e:cat/e:houveAfast", ns).text, "N")
+
+    @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
+    @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
     def test_ultimo_dia_trabalhado(self):
         evento = self.cat.action_gerar_s2210()
         self.assertNotIn("ult_dia_trab", evento._to_esociallib_dict())

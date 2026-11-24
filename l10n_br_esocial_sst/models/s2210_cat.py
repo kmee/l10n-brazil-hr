@@ -172,8 +172,9 @@ class ESocialS2210(models.Model):
             dados["dt_obito"] = str(acidente.date_obito)
         if acidente.ultimo_dia_trabalhado:
             dados["ult_dia_trab"] = str(acidente.ultimo_dia_trabalhado)
-        if acidente.houve_afastamento:
-            dados["houve_afast"] = "S"
+        # cat/houveAfast: required when dtAcid >= 2023-01-16 (leiaute S-1.3),
+        # so the answer is always sent, "N" included.
+        dados["houve_afast"] = "S" if acidente.houve_afastamento else "N"
 
     def _to_local_acidente(self, dados):
         """Grupos localAcidente e ideLocalAcid."""
