@@ -191,17 +191,6 @@ class L10nBrHrApuracaoDia(models.Model):
             or "America/Sao_Paulo"
         )
 
-    def _limites_do_dia(self):
-        """Início e fim do dia em UTC naive, no fuso do funcionário."""
-        self.ensure_one()
-        fuso = self._fuso()
-        inicio_local = fuso.localize(datetime.combine(self.date, time.min))
-        fim_local = fuso.localize(datetime.combine(self.date, time.max))
-        return (
-            inicio_local.astimezone(pytz.utc).replace(tzinfo=None),
-            fim_local.astimezone(pytz.utc).replace(tzinfo=None),
-        )
-
     def _intervalos_previstos(self):
         """Faixas de horário previstas no calendário para este dia.
 
