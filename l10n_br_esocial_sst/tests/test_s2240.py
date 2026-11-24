@@ -63,10 +63,7 @@ class TestS2240(EsocialSstCommon):
             }
         )
         evento = self._cria_s2240()
-        ag_noc = evento._to_ag_noc(risco)
-        self.assertEqual(ag_noc["utiliz_epc"], 0)
-        self.assertEqual(ag_noc["utiliz_epi"], 0)
-        self.assertNotIn("epi", ag_noc)
+        self.assertEqual(evento._to_ag_noc(risco), {"cod_ag_noc": "09.01.001"})
 
     def test_ag_noc_qualitativo_por_decisao_judicial(self):
         """05.01.001 leva descrição e processo, sem medição e sem EPI."""
@@ -148,6 +145,17 @@ class TestS2240(EsocialSstCommon):
         self.risco.efic_epi = False
         with self.assertRaises(UserError):
             evento.action_validar()
+
+    def test_valida_tipo_de_avaliacao(self):
+        """agNoc/tpAval é obrigatório para agente diferente de 09.01.001."""
+        evento = self._cria_s2240()
+        self.risco.tp_aval = False
+        with self.assertRaisesRegex(UserError, "tipo de avaliação"):
+            evento.action_validar()
+        with self.assertRaisesRegex(UserError, "tipo de avaliação"):
+            evento._to_esociallib_dict()
+        self.risco.tp_aval = "1"
+        self.assertEqual(evento._to_esociallib_dict()["ag_noc"][0]["tp_aval"], 1)
 
     def test_valida_so_ausencia_de_risco(self):
         """Ausência sozinha no evento é válida, sem EPC, EPI nem entrega."""
@@ -259,6 +267,33 @@ class TestS2240(EsocialSstCommon):
         self.assertEqual(root.find(".//e:infoAmb/e:dscSetor", ns).text, "PRODUCAO")
         self.assertEqual(root.find(".//e:respReg/e:cpfResp", ns).text, "07616692941")
         self.assertEqual(root.find(".//e:ideVinculo/e:cpfTrab", ns).text, "07616692990")
+
+    @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
+    @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
+    def test_xml_ausencia_de_risco_so_com_o_codigo(self):
+        """09.01.001: sem epcEpi (CONDICAO_GRUPO N), tpAval nem dscAgNoc."""
+        risco_ausencia = self.env["l10n_br.sst.risco"].create(
+            {
+                "ambiente_id": self.ambiente.id,
+                "agente_nocivo_id": self.agente_ausencia.id,
+                "laudo_id": self.laudo.id,
+                "descricao": "Sem exposição a agente nocivo.",
+                "date_from": self.hoje,
+            }
+        )
+        evento = self.env["l10n_br.esocial.s2240"].gerar_para_contrato(
+            self.contract, data=self.hoje
+        )
+        evento.risco_ids = [(6, 0, risco_ausencia.ids)]
+        dados = evento._to_esociallib_dict()
+        self.assertEqual(dados["ag_noc"], [{"cod_ag_noc": "09.01.001"}])
+        xml = evento._gerar_xml()
+        root = etree.fromstring(xml.encode("utf-8") if isinstance(xml, str) else xml)
+        ns = {"e": NS_2240}
+        ag_noc = root.find(".//e:agNoc", ns)
+        self.assertEqual(ag_noc.find("e:codAgNoc", ns).text, "09.01.001")
+        for tag in ("dscAgNoc", "tpAval", "epcEpi"):
+            self.assertIsNone(ag_noc.find(f"e:{tag}", ns))
 
     @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
     @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")

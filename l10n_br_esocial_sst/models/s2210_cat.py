@@ -9,9 +9,13 @@ from odoo.exceptions import UserError
 # evtCAT/cat/tpAcid
 TIPO_ACIDENTE_TIPICO = "1"
 TIPO_ACIDENTE_TRAJETO = "3"
+# evtCAT/cat/localAcidente/tpLocal
+TIPO_LOCAL_EXTERIOR = "2"
 # Leiaute S-1.3, hrsTrabAntesAcid: obrigatório no acidente típico e, a partir
 # desta data, no de trajeto.
 INICIO_HRS_TRAB_TRAJETO = date(2022, 7, 20)
+# Leiaute S-1.3, ultDiaTrab and houveAfast: required from this accident date.
+INICIO_ULT_DIA_TRAB = date(2023, 1, 16)
 
 
 class ESocialS2210(models.Model):
@@ -70,14 +74,20 @@ class ESocialS2210(models.Model):
         for rec in self:
             acidente = rec.acidente_id
             faltando = []
-            if not acidente.situacao_geradora_id:
-                faltando.append(_("situação geradora"))
-            if not acidente.parte_corpo_id:
-                faltando.append(_("parte do corpo atingida"))
-            if not acidente.agente_causador_id:
-                faltando.append(_("agente causador"))
             if not acidente.dsc_lograd or not acidente.nr_lograd:
                 faltando.append(_("logradouro e número do local do acidente"))
+            # localAcidente/codPostal: required when tpLocal = 2. The model has
+            # no field of its own, so the location postal code (cep_local)
+            # carries it.
+            if acidente.tp_local == TIPO_LOCAL_EXTERIOR and not acidente.cep_local:
+                faltando.append(
+                    _("código postal do local no exterior (campo CEP do local)")
+                )
+            if (
+                acidente.date_acidente >= INICIO_ULT_DIA_TRAB
+                and not acidente.ultimo_dia_trabalhado
+            ):
+                faltando.append(_("último dia trabalhado"))
             if not acidente.date_atendimento:
                 faltando.append(_("data do atendimento"))
             if not acidente.hora_atendimento:
@@ -92,6 +102,9 @@ class ESocialS2210(models.Model):
                 faltando.append(_("emitente do atestado"))
             if not acidente.ide_oc_emit or not acidente.nr_oc_emit:
                 faltando.append(_("órgão de classe e número do emitente"))
+            # emitente/ufOC: required when ideOC is 1 (CRM) or 2 (CRO).
+            if acidente.ide_oc_emit in ("1", "2") and not acidente.uf_oc_emit:
+                faltando.append(_("UF do órgão de classe do emitente (CRM ou CRO)"))
             if faltando:
                 raise UserError(
                     _(
@@ -104,11 +117,6 @@ class ESocialS2210(models.Model):
                     }
                 )
             rec._validar_hrs_trab_antes_acid()
-            if acidente.houve_obito and not acidente.date_obito:
-                raise UserError(
-                    _("S-2210 de %(nome)s: informe a data do óbito.")
-                    % {"nome": rec.employee_id.name}
-                )
             if rec.cat_id.tipo_cat_codigo in ("2", "3") and not (
                 rec.cat_id.nr_rec_cat_orig
             ):
@@ -172,14 +180,30 @@ class ESocialS2210(models.Model):
             dados["dt_obito"] = str(acidente.date_obito)
         if acidente.ultimo_dia_trabalhado:
             dados["ult_dia_trab"] = str(acidente.ultimo_dia_trabalhado)
-        if acidente.houve_afastamento:
-            dados["houve_afast"] = "S"
+        # cat/houveAfast: required when dtAcid >= 2023-01-16 (leiaute S-1.3),
+        # so the answer is always sent, "N" included.
+        dados["houve_afast"] = "S" if acidente.houve_afastamento else "N"
 
     def _to_local_acidente(self, dados):
         """Grupos localAcidente e ideLocalAcid."""
         acidente = self.acidente_id
         dados["tp_local"] = int(acidente.tp_local)
         self._copiar_opcionais(dados, acidente, self._CAMPOS_OPCIONAIS_LOCAL)
+        if acidente.tp_local == TIPO_LOCAL_EXTERIOR:
+            # Abroad the leiaute takes codPostal and the country (Tabela 06,
+            # same code as SISCOMEX) and forbids cep, codMunic and uf.
+            dados["cod_postal_local"] = acidente.cep_local.strip()
+            if acidente.country_id.siscomex_code:
+                dados["pais_local"] = acidente.country_id.siscomex_code
+        else:
+            self._to_endereco_brasil(dados, acidente)
+        if acidente.tp_insc_local and acidente.nr_insc_local:
+            dados["tp_insc_local"] = int(acidente.tp_insc_local)
+            dados["nr_insc_local"] = self._so_digitos(acidente.nr_insc_local)
+
+    @api.model
+    def _to_endereco_brasil(self, dados, acidente):
+        """Endereço do local no Brasil: cep, codMunic e uf."""
         if acidente.cep_local:
             dados["cep_local"] = self._so_digitos(acidente.cep_local)
         if acidente.city_id:
@@ -188,9 +212,6 @@ class ESocialS2210(models.Model):
             )
         if acidente.state_id:
             dados["uf_local"] = acidente.state_id.code
-        if acidente.tp_insc_local and acidente.nr_insc_local:
-            dados["tp_insc_local"] = int(acidente.tp_insc_local)
-            dados["nr_insc_local"] = self._so_digitos(acidente.nr_insc_local)
 
     def _to_lesao_e_atestado(self, dados):
         """Grupos parteAtingida, agenteCausador, atestado e emitente."""
@@ -204,16 +225,13 @@ class ESocialS2210(models.Model):
                 "ind_internacao": acidente.ind_internacao or "N",
                 "ind_afast": acidente.ind_afast or "N",
                 "dsc_lesao": acidente.natureza_lesao_id.codigo,
+                "dur_trat": str(acidente.dur_trat),
+                "cod_cid": acidente.cid_id.codigo,
                 "nm_emit": acidente.nm_emit,
+                "ide_oc": int(acidente.ide_oc_emit),
             }
         )
         self._copiar_opcionais(dados, acidente, self._CAMPOS_OPCIONAIS_ATESTADO)
-        if acidente.dur_trat:
-            dados["dur_trat"] = str(acidente.dur_trat)
-        if acidente.cid_id:
-            dados["cod_cid"] = acidente.cid_id.codigo
-        if acidente.ide_oc_emit:
-            dados["ide_oc"] = int(acidente.ide_oc_emit)
         if acidente.uf_oc_emit:
             dados["uf_oc"] = acidente.uf_oc_emit.upper()
 

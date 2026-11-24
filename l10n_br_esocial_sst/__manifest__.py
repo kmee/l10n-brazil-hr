@@ -4,7 +4,7 @@
 {
     "name": "eSocial - Eventos de SST",
     "summary": "S-2210 (CAT), S-2220 (ASO), S-2221 e S-2240 (agentes nocivos)",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.0.1",
     "license": "AGPL-3",
     "author": "KMEE,Odoo Community Association (OCA)",
     "website": "https://github.com/kmee/l10n-brazil-hr",

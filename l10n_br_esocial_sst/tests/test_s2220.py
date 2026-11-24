@@ -214,3 +214,29 @@ class TestS2220(EsocialSstCommon):
         self.assertEqual(registro.tipo, "S-2220")
         self.assertTrue(registro.id_evento)
         self.assertEqual(exame.l10n_br_s2220_id.evento_id, registro)
+
+    @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
+    @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
+    def test_coordenador_sem_crm_bloqueia_o_envio(self):
+        """respMonit é opcional, mas quando vai exige nrCRM e ufCRM."""
+        exame = self._aso_concluido()
+        evento = exame.l10n_br_s2220_id
+        rotulo = "número e UF do CRM do médico coordenador do PCMSO"
+        self.medico.uf_oc = False
+        with self.assertRaisesRegex(UserError, rotulo):
+            evento._validar_antes_do_envio()
+        self.medico.write({"nr_oc": False, "uf_oc": "MG"})
+        with self.assertRaisesRegex(UserError, rotulo):
+            evento.action_gerar_evento()
+        self.assertFalse(evento.evento_id)
+        self.medico.write({"nr_oc": "654321", "uf_oc": "mg"})
+        dados = evento._to_esociallib_dict()
+        self.assertEqual(dados["nr_crm_resp"], "654321")
+        self.assertEqual(dados["uf_crm_resp"], "MG")
+        xml = evento._gerar_xml()
+        root = etree.fromstring(xml.encode("utf-8") if isinstance(xml, str) else xml)
+        ns = {"e": NS_2220}
+        resp = root.find(".//e:exMedOcup/e:respMonit", ns)
+        self.assertEqual(resp.find("e:nmResp", ns).text, "Dra. Coordenadora")
+        self.assertEqual(resp.find("e:nrCRM", ns).text, "654321")
+        self.assertEqual(resp.find("e:ufCRM", ns).text, "MG")

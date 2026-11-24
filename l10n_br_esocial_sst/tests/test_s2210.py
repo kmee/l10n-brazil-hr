@@ -55,6 +55,7 @@ class TestS2210(EsocialSstCommon):
                 "uf_oc_emit": "MG",
                 "houve_afastamento": True,
                 "ind_afast": "S",
+                "ultimo_dia_trabalhado": date(2026, 6, 10),
             }
         )
         cls.acidente.action_registrar()
@@ -250,6 +251,37 @@ class TestS2210(EsocialSstCommon):
 
     @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
     @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
+    def test_local_no_exterior(self):
+        """tpLocal 2: codPostal obrigatório; cep, codMunic e uf não se informam."""
+        cidade = self._cidade()
+        self.acidente.write(
+            {
+                "tp_local": "2",
+                "cep_local": False,
+                "city_id": cidade.id,
+                "state_id": cidade.state_id.id,
+                "country_id": self.env.ref("base.ar").id,
+            }
+        )
+        evento = self.cat.action_gerar_s2210()
+        with self.assertRaisesRegex(UserError, "código postal do local no exterior"):
+            evento._validar_antes_do_envio()
+        self.acidente.cep_local = "C1425"
+        dados = evento._to_esociallib_dict()
+        self.assertEqual(dados["tp_local"], 2)
+        self.assertEqual(dados["cod_postal_local"], "C1425")
+        self.assertEqual(dados["pais_local"], "063")
+        for chave in ("cep_local", "cod_munic_local", "uf_local"):
+            self.assertNotIn(chave, dados)
+        ns = {"e": NS_2210}
+        local = self._xml(evento).find(".//e:cat/e:localAcidente", ns)
+        self.assertEqual(local.find("e:codPostal", ns).text, "C1425")
+        self.assertEqual(local.find("e:pais", ns).text, "063")
+        for tag in ("cep", "codMunic", "uf"):
+            self.assertIsNone(local.find(f"e:{tag}", ns))
+
+    @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
+    @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
     def test_local_em_embarcacao_sem_endereco_postal(self):
         """Em embarcação o leiaute não exige CEP, município nem UF."""
         self.acidente.write({"tp_local": "6", "cep_local": False})
@@ -267,15 +299,50 @@ class TestS2210(EsocialSstCommon):
 
     @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
     @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
+    def test_houve_afastamento_sempre_informado(self):
+        """cat/houveAfast é obrigatório a partir de 16/01/2023: vai S ou N."""
+        evento = self.cat.action_gerar_s2210()
+        ns = {"e": NS_2210}
+        self.assertEqual(evento._to_esociallib_dict()["houve_afast"], "S")
+        self.assertEqual(self._xml(evento).find(".//e:cat/e:houveAfast", ns).text, "S")
+        self.acidente.write({"houve_afastamento": False, "ind_afast": "N"})
+        self.assertEqual(evento._to_esociallib_dict()["houve_afast"], "N")
+        self.assertEqual(self._xml(evento).find(".//e:cat/e:houveAfast", ns).text, "N")
+
+    def test_ultimo_dia_trabalhado_obrigatorio_desde_16_01_2023(self):
+        """cat/ultDiaTrab é obrigatório se dtAcid >= 2023-01-16."""
+        evento = self.cat.action_gerar_s2210()
+        self.acidente.ultimo_dia_trabalhado = False
+        with self.assertRaisesRegex(UserError, "último dia trabalhado"):
+            evento._validar_antes_do_envio()
+        self.acidente.date_acidente = date(2023, 1, 16)
+        with self.assertRaisesRegex(UserError, "último dia trabalhado"):
+            evento._validar_antes_do_envio()
+        self.acidente.date_acidente = date(2023, 1, 15)
+        self.assertNotIn("ult_dia_trab", evento._to_esociallib_dict())
+
+    @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
+    @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
     def test_ultimo_dia_trabalhado(self):
         evento = self.cat.action_gerar_s2210()
-        self.assertNotIn("ult_dia_trab", evento._to_esociallib_dict())
+        self.assertEqual(evento._to_esociallib_dict()["ult_dia_trab"], "2026-06-10")
         self.acidente.ultimo_dia_trabalhado = date(2026, 6, 9)
         self.assertEqual(evento._to_esociallib_dict()["ult_dia_trab"], "2026-06-09")
         root = self._xml(evento)
         self.assertEqual(
             root.find(".//e:cat/e:ultDiaTrab", {"e": NS_2210}).text, "2026-06-09"
         )
+
+    def test_emitente_crm_ou_cro_exige_uf(self):
+        """emitente/ufOC é obrigatório se ideOC = 1 (CRM) ou 2 (CRO)."""
+        evento = self.cat.action_gerar_s2210()
+        rotulo = "UF do órgão de classe do emitente"
+        for ide_oc in ("1", "2"):
+            self.acidente.write({"ide_oc_emit": ide_oc, "uf_oc_emit": False})
+            with self.assertRaisesRegex(UserError, rotulo):
+                evento._validar_antes_do_envio()
+        self.acidente.uf_oc_emit = "sp"
+        self.assertEqual(evento._to_esociallib_dict()["uf_oc"], "SP")
 
     @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
     @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")

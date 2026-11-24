@@ -43,6 +43,21 @@ class TestBaseSst(EsocialSstCommon):
         with self.assertRaisesRegex(UserError, "não possui CPF"):
             evento._to_esociallib_dict()
 
+    def test_sem_matricula_nem_categoria(self):
+        """ideVinculo/codCateg é obrigatório se não houver matrícula."""
+        self._entrega_epi()
+        evento = self.env["l10n_br.esocial.s2240"].gerar_para_contrato(
+            self.contract, data=self.hoje
+        )
+        self.employee.write(
+            {
+                "l10n_br_esocial_matricula": False,
+                "l10n_br_esocial_categoria_id": False,
+            }
+        )
+        with self.assertRaisesRegex(UserError, "nem a categoria"):
+            evento._to_esociallib_dict()
+
     def test_retificacao_exige_recibo(self):
         evento = self._s2221(ind_retif="2")
         with self.assertRaisesRegex(UserError, "recibo do evento retificado"):
