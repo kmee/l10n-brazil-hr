@@ -8,6 +8,8 @@ from odoo.exceptions import UserError
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
+from odoo.addons.l10n_br_hr_payroll_attendance.hooks import post_init_hook
+
 
 @tagged("post_install", "-at_install")
 class TestPonteFolha(TransactionCase):
@@ -317,3 +319,87 @@ class TestPonteFolha(TransactionCase):
         holerite.l10n_br_horas_extras_50 = 10.0
         holerite.action_payslip_done()
         self.assertEqual(holerite.state, "done")
+
+    def test_sem_divergencia_valida_sem_registro_no_historico(self):
+        """Holerite igual à apuração fechada valida sem justificativa e sem
+        a nota de divergência no histórico."""
+        self._marcar(2, (8, 0), (12, 0), (13, 0), (19, 0))
+        self._apurar_marco()
+        holerite = self._holerite()
+        self.assertTrue(holerite.l10n_br_apuracao_fechada)
+        self.assertEqual(holerite._l10n_br_divergencias(), [])
+        holerite.action_payslip_done()
+        self.assertEqual(holerite.state, "done")
+        self.assertFalse(
+            holerite.message_ids.filtered(
+                lambda msg: "divergência justificada" in (msg.body or "")
+            )
+        )
+
+    # ------------------------------------------------------------------
+    # Casos-limite
+    # ------------------------------------------------------------------
+
+    def test_holerite_novo_sem_empregado_nao_busca_apuracao(self):
+        """No formulário, antes de escolher o empregado, não há apuração."""
+        holerite = self.env["hr.payslip"].new({})
+        self.assertFalse(holerite.employee_id)
+        self.assertEqual(holerite.l10n_br_apuracao_count, 0)
+        self.assertFalse(holerite.l10n_br_tem_apuracao)
+        self.assertFalse(holerite.l10n_br_apuracao_fechada)
+
+    def test_periodo_sem_faltas_gera_so_dias_trabalhados(self):
+        """Holerite de um dia trabalhado: só a linha de dias trabalhados."""
+        self._marcar(2, (8, 0), (12, 0), (13, 0), (17, 0))
+        self._apurar_marco(fechar=False)
+        holerite = self.env["hr.payslip"].create(
+            {
+                "name": "Holerite Carlos 02/03/2026",
+                "employee_id": self.employee.id,
+                "contract_id": self.contract.id,
+                "struct_id": self.contract.struct_id.id,
+                "date_from": date(2026, 3, 2),
+                "date_to": date(2026, 3, 2),
+                "company_id": self.company.id,
+            }
+        )
+        holerite.compute_sheet()
+        self.assertEqual(holerite.l10n_br_apuracao_count, 1)
+        codigos = holerite.worked_days_line_ids.mapped("code")
+        self.assertNotIn("FALTAS", codigos)
+        self.assertNotIn("AUSENCIA_ABONADA", codigos)
+        work100 = holerite.worked_days_line_ids.filtered(
+            lambda linha: linha.code == "WORK100"
+        )
+        self.assertEqual(work100.number_of_days, 1)
+        self.assertAlmostEqual(work100.number_of_hours, 8.0, places=2)
+
+    def test_acao_abre_os_dias_apurados_do_holerite(self):
+        self._apurar_marco(fechar=False)
+        holerite = self._holerite()
+        acao = holerite.action_ver_apuracao()
+        self.assertEqual(acao["res_model"], "l10n_br.hr.apuracao.dia")
+        self.assertEqual(
+            acao["domain"], [("id", "in", holerite.l10n_br_apuracao_dia_ids.ids)]
+        )
+        self.assertEqual(len(holerite.l10n_br_apuracao_dia_ids), 31)
+
+    def test_hook_reaplicado_restaura_e_nao_duplica(self):
+        """O hook devolve à estrutura CLT a rubrica removida e o líquido com
+        a categoria IND; rodado de novo, não muda nada."""
+        estrutura = self.env.ref("l10n_br_hr_payroll.structure_clt")
+        dsr = self.env.ref("l10n_br_hr_payroll_attendance.hr_rule_dsr_he")
+        net = self.env.ref("l10n_br_hr_payroll.hr_rule_net")
+        estrutura.write({"rule_ids": [(3, dsr.id)]})
+        net.amount_python_compute = (
+            "result = categories.BASIC + categories.ALW - categories.DED"
+        )
+        post_init_hook(self.env)
+        self.assertIn(dsr, estrutura.rule_ids)
+        self.assertIn("categories.IND", net.amount_python_compute)
+
+        regras = estrutura.rule_ids
+        formula = net.amount_python_compute
+        post_init_hook(self.env)
+        self.assertEqual(estrutura.rule_ids, regras)
+        self.assertEqual(net.amount_python_compute, formula)
