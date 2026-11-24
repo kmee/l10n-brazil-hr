@@ -14,6 +14,14 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: l10n_br_esocial_sst
+#. odoo-python
+#: code:addons/l10n_br_esocial_sst/models/base_sst.py:0
+msgid ""
+"%(tipo)s de %(nome)s: o trabalhador não tem a matrícula do eSocial nem a "
+"categoria, e o evento exige uma das duas."
+msgstr ""
+
+#. module: l10n_br_esocial_sst
 #: model:ir.model.fields.selection,name:l10n_br_esocial_sst.selection__l10n_br_esocial_base_sst__ind_retif__1
 #: model:ir.model.fields.selection,name:l10n_br_esocial_sst.selection__l10n_br_esocial_s2210__ind_retif__1
 #: model:ir.model.fields.selection,name:l10n_br_esocial_sst.selection__l10n_br_esocial_s2220__ind_retif__1
@@ -388,12 +396,6 @@ msgstr ""
 #. module: l10n_br_esocial_sst
 #. odoo-python
 #: code:addons/l10n_br_esocial_sst/models/s2210_cat.py:0
-msgid "S-2210 de %(nome)s: informe a data do óbito."
-msgstr ""
-
-#. module: l10n_br_esocial_sst
-#. odoo-python
-#: code:addons/l10n_br_esocial_sst/models/s2210_cat.py:0
 msgid ""
 "S-2210 de %(nome)s: informe as horas trabalhadas antes do acidente "
 "(hrsTrabAntesAcid). O eSocial as exige no acidente típico e, desde "
@@ -446,6 +448,14 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_br_esocial_sst/models/s2240_condicoes_ambientais.py:0
 msgid ""
+"S-2240 de %(nome)s, agente %(agente)s: informe o tipo de avaliação "
+"(quantitativo ou qualitativo) no fator de risco."
+msgstr ""
+
+#. module: l10n_br_esocial_sst
+#. odoo-python
+#: code:addons/l10n_br_esocial_sst/models/s2240_condicoes_ambientais.py:0
+msgid ""
 "S-2240 de %(nome)s, agente %(agente)s: informe se o EPC implementado é "
 "eficaz."
 msgstr ""
@@ -464,14 +474,6 @@ msgid ""
 "S-2240 de %(nome)s, agente %(agente)s: o evento declara uso de EPI, mas não "
 "há entrega válida com Certificado de Aprovação em %(data)s. Registre a "
 "entrega ou corrija a utilização de EPI no fator de risco."
-msgstr ""
-
-#. module: l10n_br_esocial_sst
-#. odoo-python
-#: code:addons/l10n_br_esocial_sst/models/s2240_condicoes_ambientais.py:0
-msgid ""
-"S-2240 de %(nome)s: com ausência de agente nocivo, a utilização de EPC e de "
-"EPI deve ser 'não se aplica'."
 msgstr ""
 
 #. module: l10n_br_esocial_sst
@@ -539,6 +541,12 @@ msgid "UF do CRM"
 msgstr ""
 
 #. module: l10n_br_esocial_sst
+#. odoo-python
+#: code:addons/l10n_br_esocial_sst/models/s2210_cat.py:0
+msgid "UF do órgão de classe do emitente (CRM ou CRO)"
+msgstr ""
+
+#. module: l10n_br_esocial_sst
 #: model_terms:ir.ui.view,arch_db:l10n_br_esocial_sst.view_esocial_s2240_form
 msgid "Validar"
 msgstr ""
@@ -555,14 +563,14 @@ msgstr ""
 
 #. module: l10n_br_esocial_sst
 #. odoo-python
-#: code:addons/l10n_br_esocial_sst/models/s2210_cat.py:0
-msgid "agente causador"
+#: code:addons/l10n_br_esocial_sst/models/s2220_monitoramento_saude.py:0
+msgid "ao menos um exame complementar"
 msgstr ""
 
 #. module: l10n_br_esocial_sst
 #. odoo-python
-#: code:addons/l10n_br_esocial_sst/models/s2220_monitoramento_saude.py:0
-msgid "ao menos um exame complementar"
+#: code:addons/l10n_br_esocial_sst/models/s2210_cat.py:0
+msgid "código postal do local no exterior (campo CEP do local)"
 msgstr ""
 
 #. module: l10n_br_esocial_sst
@@ -640,14 +648,8 @@ msgstr ""
 
 #. module: l10n_br_esocial_sst
 #. odoo-python
-#: code:addons/l10n_br_esocial_sst/models/s2210_cat.py:0
-msgid "parte do corpo atingida"
-msgstr ""
-
-#. module: l10n_br_esocial_sst
-#. odoo-python
-#: code:addons/l10n_br_esocial_sst/models/s2210_cat.py:0
-msgid "situação geradora"
+#: code:addons/l10n_br_esocial_sst/models/s2220_monitoramento_saude.py:0
+msgid "número e UF do CRM do médico coordenador do PCMSO"
 msgstr ""
 
 #. module: l10n_br_esocial_sst
@@ -660,4 +662,10 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_br_esocial_sst/models/s2210_cat.py:0
 msgid "órgão de classe e número do emitente"
+msgstr ""
+
+#. module: l10n_br_esocial_sst
+#. odoo-python
+#: code:addons/l10n_br_esocial_sst/models/s2210_cat.py:0
+msgid "último dia trabalhado"
 msgstr ""
