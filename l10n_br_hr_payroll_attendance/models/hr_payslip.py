@@ -266,10 +266,7 @@ class HrPayslip(models.Model):
     def _l10n_br_divergencias(self):
         """Diferenças entre o holerite e a apuração fechada (RP-19)."""
         self.ensure_one()
-        dias = self.l10n_br_apuracao_dia_ids
-        if not dias:
-            return []
-        totais = self._l10n_br_totais_apuracao(dias)
+        totais = self._l10n_br_totais_apuracao(self.l10n_br_apuracao_dia_ids)
         comparacoes = (
             (_("Horas extras 50%"), self.l10n_br_horas_extras_50, totais["he_50"]),
             (_("Horas extras 100%"), self.l10n_br_horas_extras_100, totais["he_100"]),
