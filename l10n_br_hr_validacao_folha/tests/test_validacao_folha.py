@@ -174,10 +174,10 @@ class TestValidacaoFolha(PayrollCommon):
         self.assertTrue(payslip2)
 
     def test_invalid_dates_rejected(self):
-        """Data inicial posterior à final é rejeitada."""
+        """Data inicial posterior à final é rejeitada pela regra do payroll."""
         emp = self._create_employee()
         contract = self._create_contract(emp, wage=3000.00)
-        with self.assertRaises(ValidationError):
+        with self.assertRaisesRegex(ValidationError, "Date From"):
             self.env["hr.payslip"].create(
                 {
                     "name": "Test",
@@ -211,3 +211,38 @@ class TestValidacaoFolha(PayrollCommon):
         payslip.compute_sheet()
         payslip.action_payslip_done()
         self.assertEqual(payslip.state, "done")
+
+    def test_confirm_without_net_line_rejected(self):
+        """Estrutura sem a regra de líquido (NET) não confirma o holerite."""
+        emp = self._create_employee()
+        contract = self._create_contract(emp, wage=3000.00)
+        categoria = self.env["hr.salary.rule.category"].create(
+            {"name": "Base Teste", "code": "BASE_TST"}
+        )
+        regra = self.env["hr.salary.rule"].create(
+            {
+                "name": "Salário Teste",
+                "code": "SALARIO_TST",
+                "sequence": 1,
+                "category_id": categoria.id,
+                "amount_select": "fix",
+                "amount_fix": 1000.0,
+            }
+        )
+        estrutura = self.env["hr.payroll.structure"].create(
+            {
+                "name": "Estrutura sem líquido",
+                "code": "SEM_NET",
+                "parent_id": False,
+                "rule_ids": [(6, 0, regra.ids)],
+            }
+        )
+        vals = self._create_payslip_vals(emp, contract)
+        vals["struct_id"] = estrutura.id
+        payslip = self.env["hr.payslip"].create(vals)
+        payslip.compute_sheet()
+        self.assertEqual(payslip.line_ids.mapped("code"), ["SALARIO_TST"])
+        self.assertEqual(payslip.line_ids.total, 1000.0)
+        with self.assertRaisesRegex(ValidationError, r"linha de líquido \(NET\)"):
+            payslip.action_payslip_done()
+        self.assertNotEqual(payslip.state, "done")
