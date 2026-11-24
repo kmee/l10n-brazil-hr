@@ -5,7 +5,7 @@
     "name": "Registro de Ponto Brasileiro - Apuração",
     "summary": "Motor de apuração da jornada: tolerância, intervalos, "
     "adicional noturno, horas extras, faltas e DSR (CLT)",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.0.1",
     "category": "Human Resources/Attendances",
     "license": "AGPL-3",
     "author": "KMEE,Odoo Community Association (OCA)",

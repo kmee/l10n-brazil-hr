@@ -26,7 +26,7 @@ class L10nBrHrApuracaoDia(models.Model):
     _name = "l10n_br.hr.apuracao.dia"
     _description = "Apuração Diária de Jornada"
     _order = "date desc, employee_id"
-    _rec_name = "display_name"
+    _rec_names_search = ["employee_id", "date"]
 
     employee_id = fields.Many2one(
         comodel_name="hr.employee",
@@ -157,7 +157,6 @@ class L10nBrHrApuracaoDia(models.Model):
         string="Inconsistências",
         help="O que impede considerar a apuração deste dia confiável.",
     )
-    display_name = fields.Char(compute="_compute_display_name_apuracao")
 
     _sql_constraints = [
         (
@@ -172,8 +171,8 @@ class L10nBrHrApuracaoDia(models.Model):
         for rec in self:
             rec.dia_semana = str(rec.date.weekday()) if rec.date else False
 
-    @api.depends("employee_id", "date")
-    def _compute_display_name_apuracao(self):
+    @api.depends("employee_id.name", "date")
+    def _compute_display_name(self):
         for rec in self:
             rec.display_name = "{} - {}".format(
                 rec.employee_id.name or "",
