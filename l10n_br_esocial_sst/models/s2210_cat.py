@@ -9,6 +9,8 @@ from odoo.exceptions import UserError
 # evtCAT/cat/tpAcid
 TIPO_ACIDENTE_TIPICO = "1"
 TIPO_ACIDENTE_TRAJETO = "3"
+# evtCAT/cat/localAcidente/tpLocal
+TIPO_LOCAL_EXTERIOR = "2"
 # Leiaute S-1.3, hrsTrabAntesAcid: obrigatório no acidente típico e, a partir
 # desta data, no de trajeto.
 INICIO_HRS_TRAB_TRAJETO = date(2022, 7, 20)
@@ -80,6 +82,13 @@ class ESocialS2210(models.Model):
                 faltando.append(_("agente causador"))
             if not acidente.dsc_lograd or not acidente.nr_lograd:
                 faltando.append(_("logradouro e número do local do acidente"))
+            # localAcidente/codPostal: required when tpLocal = 2. The model has
+            # no field of its own, so the location postal code (cep_local)
+            # carries it.
+            if acidente.tp_local == TIPO_LOCAL_EXTERIOR and not acidente.cep_local:
+                faltando.append(
+                    _("código postal do local no exterior (campo CEP do local)")
+                )
             if (
                 acidente.date_acidente >= INICIO_ULT_DIA_TRAB
                 and not acidente.ultimo_dia_trabalhado
@@ -191,6 +200,21 @@ class ESocialS2210(models.Model):
         acidente = self.acidente_id
         dados["tp_local"] = int(acidente.tp_local)
         self._copiar_opcionais(dados, acidente, self._CAMPOS_OPCIONAIS_LOCAL)
+        if acidente.tp_local == TIPO_LOCAL_EXTERIOR:
+            # Abroad the leiaute takes codPostal and the country (Tabela 06,
+            # same code as SISCOMEX) and forbids cep, codMunic and uf.
+            dados["cod_postal_local"] = acidente.cep_local.strip()
+            if acidente.country_id.siscomex_code:
+                dados["pais_local"] = acidente.country_id.siscomex_code
+        else:
+            self._to_endereco_brasil(dados, acidente)
+        if acidente.tp_insc_local and acidente.nr_insc_local:
+            dados["tp_insc_local"] = int(acidente.tp_insc_local)
+            dados["nr_insc_local"] = self._so_digitos(acidente.nr_insc_local)
+
+    @api.model
+    def _to_endereco_brasil(self, dados, acidente):
+        """Endereço do local no Brasil: cep, codMunic e uf."""
         if acidente.cep_local:
             dados["cep_local"] = self._so_digitos(acidente.cep_local)
         if acidente.city_id:
@@ -199,9 +223,6 @@ class ESocialS2210(models.Model):
             )
         if acidente.state_id:
             dados["uf_local"] = acidente.state_id.code
-        if acidente.tp_insc_local and acidente.nr_insc_local:
-            dados["tp_insc_local"] = int(acidente.tp_insc_local)
-            dados["nr_insc_local"] = self._so_digitos(acidente.nr_insc_local)
 
     def _to_lesao_e_atestado(self, dados):
         """Grupos parteAtingida, agenteCausador, atestado e emitente."""

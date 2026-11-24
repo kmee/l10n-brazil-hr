@@ -251,6 +251,37 @@ class TestS2210(EsocialSstCommon):
 
     @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
     @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
+    def test_local_no_exterior(self):
+        """tpLocal 2: codPostal obrigatório; cep, codMunic e uf não se informam."""
+        cidade = self._cidade()
+        self.acidente.write(
+            {
+                "tp_local": "2",
+                "cep_local": False,
+                "city_id": cidade.id,
+                "state_id": cidade.state_id.id,
+                "country_id": self.env.ref("base.ar").id,
+            }
+        )
+        evento = self.cat.action_gerar_s2210()
+        with self.assertRaisesRegex(UserError, "código postal do local no exterior"):
+            evento._validar_antes_do_envio()
+        self.acidente.cep_local = "C1425"
+        dados = evento._to_esociallib_dict()
+        self.assertEqual(dados["tp_local"], 2)
+        self.assertEqual(dados["cod_postal_local"], "C1425")
+        self.assertEqual(dados["pais_local"], "063")
+        for chave in ("cep_local", "cod_munic_local", "uf_local"):
+            self.assertNotIn(chave, dados)
+        ns = {"e": NS_2210}
+        local = self._xml(evento).find(".//e:cat/e:localAcidente", ns)
+        self.assertEqual(local.find("e:codPostal", ns).text, "C1425")
+        self.assertEqual(local.find("e:pais", ns).text, "063")
+        for tag in ("cep", "codMunic", "uf"):
+            self.assertIsNone(local.find(f"e:{tag}", ns))
+
+    @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
+    @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
     def test_local_em_embarcacao_sem_endereco_postal(self):
         """Em embarcação o leiaute não exige CEP, município nem UF."""
         self.acidente.write({"tp_local": "6", "cep_local": False})
