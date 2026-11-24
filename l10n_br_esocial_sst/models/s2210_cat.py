@@ -92,6 +92,9 @@ class ESocialS2210(models.Model):
                 faltando.append(_("emitente do atestado"))
             if not acidente.ide_oc_emit or not acidente.nr_oc_emit:
                 faltando.append(_("órgão de classe e número do emitente"))
+            # emitente/ufOC: required when ideOC is 1 (CRM) or 2 (CRO).
+            if acidente.ide_oc_emit in ("1", "2") and not acidente.uf_oc_emit:
+                faltando.append(_("UF do órgão de classe do emitente (CRM ou CRO)"))
             if faltando:
                 raise UserError(
                     _(

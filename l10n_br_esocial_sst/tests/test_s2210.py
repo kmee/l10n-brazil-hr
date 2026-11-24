@@ -289,6 +289,17 @@ class TestS2210(EsocialSstCommon):
             root.find(".//e:cat/e:ultDiaTrab", {"e": NS_2210}).text, "2026-06-09"
         )
 
+    def test_emitente_crm_ou_cro_exige_uf(self):
+        """emitente/ufOC é obrigatório se ideOC = 1 (CRM) ou 2 (CRO)."""
+        evento = self.cat.action_gerar_s2210()
+        rotulo = "UF do órgão de classe do emitente"
+        for ide_oc in ("1", "2"):
+            self.acidente.write({"ide_oc_emit": ide_oc, "uf_oc_emit": False})
+            with self.assertRaisesRegex(UserError, rotulo):
+                evento._validar_antes_do_envio()
+        self.acidente.uf_oc_emit = "sp"
+        self.assertEqual(evento._to_esociallib_dict()["uf_oc"], "SP")
+
     @unittest.skipUnless(HAS_ESOCIALLIB, "esociallib não instalada")
     @mute_logger("odoo.addons.l10n_br_esocial.models.intermediarios.base_intermediario")
     def test_emitente_rms_dispensa_uf(self):
