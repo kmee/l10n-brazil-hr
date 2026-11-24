@@ -2,6 +2,10 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 """Testes da verificação de integridade do PTRP."""
 
+from datetime import date
+from unittest.mock import patch
+
+from odoo.modules.module import get_module_path
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
@@ -151,3 +155,140 @@ class TestIntegridadePtrp(TransactionCase):
             ptrp_escopo.resumo_do_manifesto(entradas),
             linhas[-1].split("=", 1)[1],
         )
+
+    def test_padrao_sem_arquivo_entra_com_resumo_vazio(self):
+        """Arquivo declarado que sumiu do disco não pode sumir do manifesto."""
+        caminho = get_module_path("l10n_br_hr_attendance_integridade")
+        entradas = ptrp_escopo.manifesto_do_modulo(
+            caminho,
+            "l10n_br_hr_attendance_integridade",
+            ("models/ptrp_escopo.py", "models/arquivo_removido.py"),
+        )
+        self.assertEqual(
+            entradas[0],
+            ("l10n_br_hr_attendance_integridade/models/arquivo_removido.py", ""),
+        )
+        self.assertEqual(
+            entradas[1][0], "l10n_br_hr_attendance_integridade/models/ptrp_escopo.py"
+        )
+        self.assertEqual(len(entradas[1][1]), 64)
+
+    def test_modulo_do_escopo_desinstalado_muda_resumo_e_diagnostico(self):
+        """Outra composição produz outro resumo, com a ausência explicada."""
+        resumo_completo = self.verificador.resumo_fonte()
+        instalados = self.verificador._modulos_instalados() - {
+            "l10n_br_hr_attendance_afd"
+        }
+        with patch.object(
+            type(self.verificador), "_modulos_instalados", return_value=instalados
+        ):
+            manifesto = dict(self.verificador._manifesto_fonte())
+            # A marca é texto fixo: um terceiro precisa reproduzir o resumo.
+            self.assertEqual(
+                manifesto["l10n_br_hr_attendance_afd/(modulo nao instalado)"], ""
+            )
+            self.assertFalse(
+                [
+                    c
+                    for c in manifesto
+                    if c.startswith("l10n_br_hr_attendance_afd/models")
+                ]
+            )
+            self.assertNotEqual(self.verificador.resumo_fonte(), resumo_completo)
+            texto = self.verificador.texto_do_diagnostico()
+        self.assertIn("Módulos do escopo não instalados", texto)
+        self.assertIn("l10n_br_hr_attendance_afd", texto)
+
+    def test_modulo_fora_da_lista_autorizada_e_acusado(self):
+        """Quem estende modelo atestado sem ser do PTRP vira divergência."""
+        autorizados = tuple(
+            modulo
+            for modulo in ptrp_escopo.MODULOS_DO_PTRP
+            if modulo != "l10n_br_hr_attendance_integridade"
+        )
+        with patch.object(ptrp_escopo, "MODULOS_DO_PTRP", autorizados):
+            achados = self.verificador._extensoes_de_terceiros()
+        self.assertIn(
+            "Modelo l10n_br.hr.apuracao.periodo estendido pelo módulo "
+            "l10n_br_hr_attendance_integridade.",
+            achados,
+        )
+
+
+@tagged("post_install", "-at_install")
+class TestIntegridadeNoAej(TransactionCase):
+    """O AEJ gerado carrega a integridade do PTRP vigente naquele momento."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.verificador = cls.env["l10n_br.hr.ptrp.integridade"]
+        cls.parametro = cls.env["ir.config_parameter"].sudo()
+        # A assinatura do AEJ não é o objeto destes testes.
+        patcher = patch.object(
+            type(cls.env["l10n_br.hr.apuracao.periodo"]),
+            "_certificado_ptrp",
+            return_value=None,
+        )
+        patcher.start()
+        cls.addClassCleanup(patcher.stop)
+        # Sem contrato não há dia a apurar: o AEJ sai só com cabeçalho,
+        # identificação do PTRP e trailer, que basta para a integridade.
+        funcionario = cls.env["hr.employee"].create({"name": "Pessoa Sem Contrato"})
+        cls.periodo = cls.env["l10n_br.hr.apuracao.periodo"].create(
+            {
+                "name": "Integridade 03/2026",
+                "date_from": date(2026, 3, 2),
+                "date_to": date(2026, 3, 3),
+                "company_id": cls.env.company.id,
+                "employee_ids": [(6, 0, funcionario.ids)],
+            }
+        )
+        cls.periodo.action_apurar()
+        cls.periodo.with_context(l10n_br_forcar_fechamento=True).action_fechar()
+
+    def _mensagens_de_integridade(self):
+        return [
+            corpo
+            for corpo in self.periodo.message_ids.mapped("body")
+            if "Resumo do escopo atestado" in corpo
+        ]
+
+    def test_sem_homologado_carimba_e_avisa_no_chatter(self):
+        self.parametro.set_param(PARAM_RESUMO_HOMOLOGADO, "")
+        self.periodo.action_gerar_aej()
+        self.assertTrue(self.periodo.aej_file)
+        self.assertEqual(self.periodo.ptrp_resumo, self.verificador.resumo_fonte())
+        self.assertEqual(self.periodo.ptrp_integridade_ok, "nao_configurado")
+        self.assertEqual(
+            self.periodo.ptrp_diagnostico, self.verificador.texto_do_diagnostico()
+        )
+        mensagens = self._mensagens_de_integridade()
+        self.assertEqual(len(mensagens), 1)
+        self.assertIn("Não há resumo homologado", mensagens[0])
+
+    def test_homologado_igual_carimba_sem_alerta(self):
+        self.parametro.set_param(
+            PARAM_RESUMO_HOMOLOGADO, self.verificador.resumo_fonte()
+        )
+        self.periodo.action_gerar_aej()
+        self.assertEqual(self.periodo.ptrp_integridade_ok, "confere")
+        self.assertIn("confere com o homologado", self.periodo.ptrp_diagnostico)
+        self.assertFalse(self._mensagens_de_integridade())
+
+    def test_homologado_diferente_carimba_divergencia(self):
+        self.parametro.set_param(PARAM_RESUMO_HOMOLOGADO, "f" * 64)
+        self.periodo.action_gerar_aej()
+        self.assertEqual(self.periodo.ptrp_integridade_ok, "diverge")
+        mensagens = self._mensagens_de_integridade()
+        self.assertEqual(len(mensagens), 1)
+        self.assertIn("DIVERGE do homologado", mensagens[0])
+
+    def test_acao_mostra_o_diagnostico(self):
+        self.parametro.set_param(PARAM_RESUMO_HOMOLOGADO, "")
+        acao = self.periodo.action_ver_integridade()
+        self.assertEqual(acao["tag"], "display_notification")
+        self.assertEqual(
+            acao["params"]["message"], self.verificador.texto_do_diagnostico()
+        )
+        self.assertTrue(acao["params"]["sticky"])
