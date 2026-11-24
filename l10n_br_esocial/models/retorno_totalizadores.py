@@ -74,8 +74,6 @@ def _nome(elemento):
 
 def _texto(pai, nome):
     """Texto do primeiro descendente com o nome local informado."""
-    if pai is None:
-        return None
     for elemento in pai.iter():
         if _nome(elemento) == nome and elemento.text:
             return elemento.text.strip()

@@ -4,6 +4,8 @@
 import base64
 import logging
 
+from esociallib import assinar, consultar_lote, enviar_lote
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
@@ -24,14 +26,6 @@ PERIODIC_S1_TYPES = frozenset(
         "S-1299",
     }
 )
-
-try:
-    from esociallib import assinar, consultar_lote, enviar_lote
-except ImportError:
-    assinar = None
-    consultar_lote = None
-    enviar_lote = None
-    _logger.warning("esociallib not installed. eSocial transmission disabled.")
 
 
 class ESocialLote(models.Model):

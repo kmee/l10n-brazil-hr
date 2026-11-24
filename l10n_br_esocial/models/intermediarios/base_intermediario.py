@@ -4,6 +4,7 @@
 import logging
 import re
 
+from esociallib import to_xml
 from lxml import etree
 
 from odoo import _, api, fields, models
@@ -16,13 +17,6 @@ RE_COMPETENCIA_MENSAL = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 RE_COMPETENCIA_ANUAL = re.compile(r"^\d{4}$")
 # Recibo de entrega do eSocial: 1.<dígito>.<19 dígitos> (TS_nrRecibo).
 RE_NR_RECIBO = re.compile(r"^1\.\d\.\d{19}$")
-
-try:
-    from esociallib import to_xml, validate_xsd
-except ImportError:
-    to_xml = None
-    validate_xsd = None
-    _logger.warning("esociallib not installed. eSocial XML generation disabled.")
 
 
 class ESocialBaseIntermediario(models.AbstractModel):
@@ -119,16 +113,6 @@ class ESocialBaseIntermediario(models.AbstractModel):
         proc_emissao = self.company_id.l10n_br_esocial_processo_emissao or "1"
         return {"proc_emi": int(proc_emissao), "ver_proc": "odoo_16_esocial_1.0"}
 
-    @api.model
-    def _check_esociallib(self):
-        if to_xml is None:
-            raise UserError(
-                _(
-                    "A biblioteca esociallib não está instalada. "
-                    "Execute: pip install esociallib"
-                )
-            )
-
     def _to_esociallib_dict(self):
         """Override in subclasses. Must return dict for esociallib builder."""
         raise NotImplementedError
@@ -148,16 +132,9 @@ class ESocialBaseIntermediario(models.AbstractModel):
         from esociallib.generator import _BUILDERS, _ensure_builders_loaded
 
         _ensure_builders_loaded()
-        builder = _BUILDERS.get(event_type)
-        if builder is None:
-            raise UserError(
-                _(
-                    "Não foi possível gerar o evento %(tipo)s: a esociallib não "
-                    "possui um builder registrado para este evento e os schemas "
-                    "XSD não estão disponíveis para validação."
-                )
-                % {"tipo": event_type}
-            )
+        # to_xml raises ValueError for an event without builder before it
+        # reaches the XSD validation, so the builder is always registered here.
+        builder = _BUILDERS[event_type]
         _logger.error(
             "eSocial %s: schemas XSD ausentes na esociallib — XML gerado SEM "
             "validação XSD. Instale os XSDs oficiais em "
@@ -182,7 +159,6 @@ class ESocialBaseIntermediario(models.AbstractModel):
     def _gerar_xml(self):
         """Generate XML for this intermediary record."""
         self.ensure_one()
-        self._check_esociallib()
         data = self._to_esociallib_dict()
         environment = self._get_tp_amb()
         event_type = self._get_event_type()
