@@ -158,8 +158,15 @@ def _parse_s5001(evt, totalizador):
                             )
                         )
 
-    # PIS/PASEP base has its own group in S-1.3, outside infoCp:
-    # infoPisPasep/ideEstab/infoCategPisPasep/infoBasePisPasep.
+    _parse_s5001_pis_pasep(evt, totalizador)
+
+
+def _parse_s5001_pis_pasep(evt, totalizador):
+    """S-5001: PIS/PASEP base by establishment and category.
+
+    In S-1.3 it has its own group, outside infoCp:
+    infoPisPasep/ideEstab/infoCategPisPasep/infoBasePisPasep.
+    """
     for ide_estab in evt.iter():
         if _nome(ide_estab) != "ideEstab":
             continue
