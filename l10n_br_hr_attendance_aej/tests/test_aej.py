@@ -3,6 +3,7 @@
 """Testes do AEJ e do espelho de ponto (RP-20 a RP-23)."""
 
 import base64
+import sys
 from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -13,6 +14,11 @@ from odoo.tests.common import TransactionCase
 from odoo.tools import mute_logger
 
 from ..models import aej_layout
+from ..models.l10n_br_hr_apuracao_periodo import L10nBrHrApuracaoPeriodo
+
+_LOGGER_PERIODO = (
+    "odoo.addons.l10n_br_hr_attendance_aej.models.l10n_br_hr_apuracao_periodo"
+)
 
 
 @tagged("post_install", "-at_install")
@@ -360,3 +366,81 @@ class TestAej(TransactionCase):
         _nome, conteudo = periodo.gerar_aej()
         bruto = conteudo.encode(aej_layout.ENCODING_AEJ)
         self.assertIn("Açúcar", bruto.decode(aej_layout.ENCODING_AEJ))
+
+    def test_data_hora_vazia_fica_em_branco(self):
+        self.assertEqual(aej_layout.formata_datetime(None), "")
+        self.assertEqual(aej_layout.formata_datetime(False, -3), "")
+
+    def test_marcacao_sem_par_entra_como_desconsiderada(self):
+        """Sem par não se afirma entrada nem saída, mas a batida não some."""
+        self._marcar(2, (8, 0), (12, 0), (13, 0))
+        periodo = self._periodo()
+        _nome, conteudo = periodo.gerar_aej()
+        marcacoes = [linha.split("|") for linha in self._por_tipo(conteudo, "05")]
+        self.assertEqual([campos[4] for campos in marcacoes], ["E", "S", "D"])
+        sem_par = marcacoes[-1]
+        self.assertEqual(sem_par[2], "2026-03-02T13:00:00-0300")
+        self.assertEqual(sem_par[5], "000")
+        self.assertEqual(sem_par[7], "")
+        self.assertEqual(sem_par[8], "Marcação sem par no dia")
+
+    def test_folga_compensatoria_vira_registro_07(self):
+        self._marcar(2, (8, 0), (12, 0), (13, 0), (17, 0))
+        periodo = self._periodo(
+            fechar=False, date_from=date(2026, 3, 2), date_to=date(2026, 3, 2)
+        )
+        periodo.dia_ids.ocorrencia_ids = [
+            (
+                4,
+                self.env.ref(
+                    "l10n_br_hr_attendance_apuracao.ocorrencia_folga_compensatoria"
+                ).id,
+            )
+        ]
+        periodo.with_context(l10n_br_forcar_fechamento=True).action_fechar()
+        _nome, conteudo = periodo.gerar_aej()
+        ausencias = [linha.split("|") for linha in self._por_tipo(conteudo, "07")]
+        self.assertEqual(len(ausencias), 1)
+        self.assertEqual(ausencias[0][2], aej_layout.AUSENCIA_FOLGA_FERIADO)
+        self.assertEqual(ausencias[0][3], "2026-03-02")
+
+    def test_assinatura_gravada_junto_do_arquivo(self):
+        """O .p7s assina exatamente os bytes do AEJ anexado (arts. 86 a 88)."""
+        self._marcar(2, (8, 0), (12, 0), (13, 0), (17, 0))
+        periodo = self._periodo()
+        with patch.object(
+            type(periodo), "_assinar_aej", return_value=b"assinatura cades"
+        ) as assinar:
+            periodo.action_gerar_aej()
+        bruto = base64.b64decode(periodo.aej_file)
+        assinar.assert_called_once_with(bruto)
+        self.assertEqual(base64.b64decode(periodo.aej_p7s), b"assinatura cades")
+        self.assertEqual(periodo.aej_p7s_filename, periodo.aej_filename + ".p7s")
+
+    def test_empresa_sem_certificado_nao_assina(self):
+        periodo = self._periodo()
+        empresa = periodo.company_id
+        if "certificate_ecnpj_id" in empresa._fields:
+            empresa.write({"certificate_ecnpj_id": False, "certificate_ecpf_id": False})
+        # Chama o método original: a suíte substitui o da classe registrada.
+        self.assertIsNone(L10nBrHrApuracaoPeriodo._certificado_ptrp(periodo))
+
+    def test_sem_biblioteca_de_assinatura_gera_sem_assinatura(self):
+        periodo = self._periodo()
+        falso = SimpleNamespace(file=base64.b64encode(b"pkcs12"), password="x")
+        with (
+            patch.object(type(periodo), "_certificado_ptrp", return_value=falso),
+            patch.dict(sys.modules, {"erpbrasil.assinatura": None}),
+            self.assertLogs(_LOGGER_PERIODO, "WARNING") as registro,
+        ):
+            self.assertIsNone(periodo._assinar_aej(b"conteudo"))
+        self.assertIn("erpbrasil.assinatura indisponível", registro.output[0])
+
+    def test_acao_do_espelho_de_ponto(self):
+        periodo = self._periodo()
+        acao = periodo.with_context(discard_logo_check=True).action_imprimir_espelho()
+        self.assertEqual(acao["type"], "ir.actions.report")
+        self.assertEqual(
+            acao["report_name"], "l10n_br_hr_attendance_aej.report_espelho_ponto"
+        )
+        self.assertEqual(acao["context"]["active_ids"], periodo.ids)
