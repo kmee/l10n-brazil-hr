@@ -377,6 +377,20 @@ class TestESocialLoteTransmissao(ESocialCicloCommon):
         self.assertFalse(evento.ocorrencia_ids)
         self.assertEqual(acao["params"]["type"], "danger")
 
+    def test_consulta_com_erro_de_comunicacao_nao_grava_nada(self):
+        """Falha no webservice vira UserError e o lote segue enviado."""
+        lote, evento = self._lote_enviado("ID1")
+        consultar = mock.Mock(side_effect=EsocialTransmissionError("tempo esgotado"))
+        with self._webservice(consultar_lote=consultar):
+            with self.assertRaises(UserError) as erro:
+                lote.action_consultar()
+        self.assertIn("Falha na consulta do lote", str(erro.exception))
+        self.assertIn("tempo esgotado", str(erro.exception))
+        self.assertEqual(lote.state, "sent")
+        self.assertEqual(lote.protocolo, PROTOCOLO)
+        self.assertEqual(evento.state, "sent")
+        self.assertFalse(evento.ocorrencia_ids)
+
     def test_consulta_exige_protocolo(self):
         lote = self._lote(self._evento("ID1", state="sent"), state="sent")
         consultar = mock.Mock()

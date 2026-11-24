@@ -247,12 +247,20 @@ class ESocialLote(models.Model):
         tp_amb = self.company_id.l10n_br_esocial_tp_amb or "2"
         environment = "restricted" if tp_amb == "2" else "production"
 
-        resultado = consultar_lote(
-            self.protocolo,
-            pfx_data,
-            senha,
-            environment=environment,
-        )
+        # Same contract as action_transmitir: a communication failure becomes
+        # a UserError before anything is written on the lote or its events.
+        try:
+            resultado = consultar_lote(
+                self.protocolo,
+                pfx_data,
+                senha,
+                environment=environment,
+            )
+        except Exception as exc:
+            _logger.exception("Erro ao consultar lote eSocial %s", self.id)
+            raise UserError(
+                _("Falha na consulta do lote: %(erro)s") % {"erro": exc}
+            ) from exc
 
         if resultado.status == "processado":
             self.state = "done"
