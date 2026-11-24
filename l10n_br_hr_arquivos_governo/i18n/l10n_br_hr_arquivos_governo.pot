@@ -147,12 +147,6 @@ msgid "Buscar Funcionários"
 msgstr ""
 
 #. module: l10n_br_hr_arquivos_governo
-#. odoo-python
-#: code:addons/l10n_br_hr_arquivos_governo/models/l10n_br_hr_dirf.py:0
-msgid "Busque os funcionários antes de gerar a DIRF."
-msgstr ""
-
-#. module: l10n_br_hr_arquivos_governo
 #: model:ir.actions.act_window,name:l10n_br_hr_arquivos_governo.l10n_br_hr_caged_action
 #: model:ir.ui.menu,name:l10n_br_hr_arquivos_governo.menu_hr_caged
 #: model_terms:ir.ui.view,arch_db:l10n_br_hr_arquivos_governo.l10n_br_hr_caged_form
@@ -506,18 +500,6 @@ msgstr ""
 #. module: l10n_br_hr_arquivos_governo
 #: model:ir.model.fields,field_description:l10n_br_hr_arquivos_governo.field_l10n_br_hr_caged__mes
 msgid "Mês"
-msgstr ""
-
-#. module: l10n_br_hr_arquivos_governo
-#. odoo-python
-#: code:addons/l10n_br_hr_arquivos_governo/models/l10n_br_hr_sefip.py:0
-msgid "Nenhum holerite encontrado para %(mes)s/%(ano)s."
-msgstr ""
-
-#. module: l10n_br_hr_arquivos_governo
-#. odoo-python
-#: code:addons/l10n_br_hr_arquivos_governo/models/l10n_br_hr_caged.py:0
-msgid "Nenhuma movimentação encontrada para %(mes)s/%(ano)s."
 msgstr ""
 
 #. module: l10n_br_hr_arquivos_governo
