@@ -85,14 +85,12 @@ class ESocialS2240(models.Model):
         """Monta um grupo agNoc a partir do fator de risco e das entregas de EPI."""
         self.ensure_one()
         dados = {"cod_ag_noc": risco.agente_nocivo_id.codigo}
+        if risco.ausencia_de_risco:
+            # 09.01.001 goes alone: leiaute S-1.3 forbids the epcEpi group
+            # (CONDICAO_GRUPO N) and tpAval, and dscAgNoc since 2024-04-22.
+            return dados
         if risco.descricao:
             dados["dsc_ag_noc"] = risco.descricao
-        if risco.ausencia_de_risco:
-            # Sem agente nocivo o leiaute só admite ausência de proteção.
-            dados["utiliz_epc"] = 0
-            dados["utiliz_epi"] = 0
-            return dados
-
         dados["tp_aval"] = int(risco.tp_aval)
         if risco.intensidade:
             dados["int_conc"] = f"{risco.intensidade:.4f}"
