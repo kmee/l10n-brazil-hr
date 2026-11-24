@@ -65,12 +65,12 @@ class HrPayslip(models.Model):
         "quando a empresa bloqueia holerite divergente.",
     )
 
-    def _l10n_br_dominio_apuracao(self):
-        self.ensure_one()
+    @api.model
+    def _l10n_br_dominio_apuracao(self, employees, date_from, date_to):
         return [
-            ("employee_id", "=", self.employee_id.id),
-            ("date", ">=", self.date_from),
-            ("date", "<=", self.date_to),
+            ("employee_id", "in", employees.ids),
+            ("date", ">=", date_from),
+            ("date", "<=", date_to),
         ]
 
     @api.depends("employee_id", "date_from", "date_to")
@@ -78,7 +78,11 @@ class HrPayslip(models.Model):
         for slip in self:
             dias = self.env["l10n_br.hr.apuracao.dia"]
             if slip.employee_id and slip.date_from and slip.date_to:
-                dias = dias.search(slip._l10n_br_dominio_apuracao())
+                dias = dias.search(
+                    slip._l10n_br_dominio_apuracao(
+                        slip.employee_id, slip.date_from, slip.date_to
+                    )
+                )
             slip.l10n_br_apuracao_dia_ids = dias
             slip.l10n_br_apuracao_count = len(dias)
             slip.l10n_br_tem_apuracao = bool(dias)
@@ -169,9 +173,20 @@ class HrPayslip(models.Model):
         trabalho, faltas e horas realmente cumpridas. Sem apuração, cai no
         comportamento do OCA ``payroll`` (calendário do contrato), o que
         mantém compatível quem ainda não usa ponto eletrônico.
+
+        O assistente de lote do ``payroll`` chama este método sem holerite
+        (recordset vazio): nesse caso a apuração é buscada pelos funcionários
+        dos contratos e pelas datas recebidas.
         """
-        self.ensure_one()
-        dias = self.l10n_br_apuracao_dia_ids
+        if self:
+            self.ensure_one()
+            dias = self.l10n_br_apuracao_dia_ids
+        else:
+            dias = self.env["l10n_br.hr.apuracao.dia"].search(
+                self._l10n_br_dominio_apuracao(
+                    contracts.employee_id, date_from, date_to
+                )
+            )
         if not dias:
             return super().get_worked_day_lines(contracts, date_from, date_to)
 

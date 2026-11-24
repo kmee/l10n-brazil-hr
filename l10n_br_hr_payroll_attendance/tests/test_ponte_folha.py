@@ -8,6 +8,7 @@ from odoo.exceptions import UserError
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
+from odoo.addons.l10n_br_hr_payroll.tests.common import cpf_valido
 from odoo.addons.l10n_br_hr_payroll_attendance.hooks import post_init_hook
 
 
@@ -84,7 +85,8 @@ class TestPonteFolha(TransactionCase):
         cls.nsr = 0
 
     @classmethod
-    def _marcar(cls, dia, *horas_locais):
+    def _marcar(cls, dia, *horas_locais, employee=None):
+        employee = employee or cls.employee
         vals = []
         for hora, minuto in horas_locais:
             cls.nsr += 1
@@ -93,7 +95,7 @@ class TestPonteFolha(TransactionCase):
                     "nsr": cls.nsr,
                     "rep_id": cls.rep.id,
                     "company_id": cls.company.id,
-                    "employee_id": cls.employee.id,
+                    "employee_id": employee.id,
                     "datetime_marcacao": datetime(2026, 3, dia, hora, minuto)
                     + timedelta(hours=3),
                     "origem": "rep_c",
@@ -101,14 +103,15 @@ class TestPonteFolha(TransactionCase):
             )
         return cls.env["l10n_br.hr.marcacao"]._criar_marcacoes(vals)
 
-    def _apurar_marco(self, fechar=True):
+    def _apurar_marco(self, fechar=True, employees=None):
+        employees = employees or self.employee
         periodo = self.env["l10n_br.hr.apuracao.periodo"].create(
             {
                 "name": "Março/2026",
                 "date_from": date(2026, 3, 1),
                 "date_to": date(2026, 3, 31),
                 "company_id": self.company.id,
-                "employee_ids": [(6, 0, self.employee.ids)],
+                "employee_ids": [(6, 0, employees.ids)],
             }
         )
         periodo.action_apurar()
@@ -245,6 +248,55 @@ class TestPonteFolha(TransactionCase):
         self.assertIn("ponto", tools)
         self.assertAlmostEqual(tools["ponto"].he_50, 2.0, places=2)
         self.assertGreater(tools["ponto"].dias_uteis, 0)
+
+    def test_lote_de_holerites_usa_a_apuracao_de_cada_funcionario(self):
+        """O assistente de lote chama get_worked_day_lines sem holerite
+        (recordset vazio): os dias trabalhados vêm da apuração de cada um."""
+        segundo = self.env["hr.employee"].create(
+            {
+                "name": "Dora Folha",
+                "vat": cpf_valido(271828),
+                "tz": "America/Sao_Paulo",
+                "resource_calendar_id": self.calendario.id,
+                "l10n_br_tipo_contrato": "clt",
+            }
+        )
+        self.contract.copy(
+            {
+                "name": "Contrato Dora",
+                "employee_id": segundo.id,
+                "state": "open",
+            }
+        )
+        self._marcar(2, (8, 0), (12, 0), (13, 0), (17, 0))
+        self._marcar(3, (8, 0), (12, 0), (13, 0), (17, 0))
+        for dia in (2, 3, 4):
+            self._marcar(dia, (8, 0), (12, 0), (13, 0), (17, 0), employee=segundo)
+        self._apurar_marco(employees=self.employee | segundo)
+        lote = self.env["hr.payslip.run"].create(
+            {
+                "name": "Folha 03/2026",
+                "date_start": date(2026, 3, 1),
+                "date_end": date(2026, 3, 31),
+            }
+        )
+        assistente = self.env["hr.payslip.employees"].create(
+            {"employee_ids": [(6, 0, (self.employee | segundo).ids)]}
+        )
+        assistente.with_context(active_id=lote.id).compute_sheet()
+
+        self.assertEqual(len(lote.slip_ids), 2)
+        esperado = {self.employee: (2, 20), segundo: (3, 19)}
+        for holerite in lote.slip_ids:
+            dias, faltas = esperado[holerite.employee_id]
+            self.assertTrue(holerite.l10n_br_apuracao_fechada)
+            linhas = holerite.worked_days_line_ids
+            work100 = linhas.filtered(lambda linha: linha.code == "WORK100")
+            self.assertEqual(work100.number_of_days, dias)
+            self.assertAlmostEqual(work100.number_of_hours, 8.0 * dias, places=2)
+            falta = linhas.filtered(lambda linha: linha.code == "FALTAS")
+            self.assertEqual(falta.number_of_days, faltas)
+            self.assertEqual(holerite.l10n_br_faltas_injustificadas, faltas)
 
     def test_usuario_de_folha_le_a_apuracao_do_funcionario(self):
         """Quem calcula a folha enxerga a apuração sem ser do ponto."""
