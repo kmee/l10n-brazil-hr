@@ -93,8 +93,7 @@ class ESocialS2240(models.Model):
             dados["utiliz_epi"] = 0
             return dados
 
-        if risco.tp_aval:
-            dados["tp_aval"] = int(risco.tp_aval)
+        dados["tp_aval"] = int(risco.tp_aval)
         if risco.intensidade:
             dados["int_conc"] = f"{risco.intensidade:.4f}"
         if risco.limite_tolerancia:
@@ -193,6 +192,16 @@ class ESocialS2240(models.Model):
                     % {"nome": nome}
                 )
             return
+        # agNoc/tpAval: required and exclusive when codAgNoc is not 09.01.001
+        # (leiaute S-1.3).
+        if not risco.tp_aval:
+            raise UserError(
+                _(
+                    "S-2240 de %(nome)s, agente %(agente)s: informe o tipo de "
+                    "avaliação (quantitativo ou qualitativo) no fator de risco."
+                )
+                % {"nome": nome, "agente": agente}
+            )
         if risco.utiliz_epc == "2" and not risco.efic_epc:
             raise UserError(
                 _(

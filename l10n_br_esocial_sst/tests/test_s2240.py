@@ -149,6 +149,17 @@ class TestS2240(EsocialSstCommon):
         with self.assertRaises(UserError):
             evento.action_validar()
 
+    def test_valida_tipo_de_avaliacao(self):
+        """agNoc/tpAval é obrigatório para agente diferente de 09.01.001."""
+        evento = self._cria_s2240()
+        self.risco.tp_aval = False
+        with self.assertRaisesRegex(UserError, "tipo de avaliação"):
+            evento.action_validar()
+        with self.assertRaisesRegex(UserError, "tipo de avaliação"):
+            evento._to_esociallib_dict()
+        self.risco.tp_aval = "1"
+        self.assertEqual(evento._to_esociallib_dict()["ag_noc"][0]["tp_aval"], 1)
+
     def test_valida_so_ausencia_de_risco(self):
         """Ausência sozinha no evento é válida, sem EPC, EPI nem entrega."""
         risco_ausencia = self.env["l10n_br.sst.risco"].create(
