@@ -17,14 +17,6 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_br_hr_validacao_folha/models/hr_payslip.py:0
 msgid ""
-"A data inicial (%(date_from)s) não pode ser posterior à data final "
-"(%(date_to)s)."
-msgstr ""
-
-#. module: l10n_br_hr_validacao_folha
-#. odoo-python
-#: code:addons/l10n_br_hr_validacao_folha/models/hr_payslip.py:0
-msgid ""
 "Já existe um holerite para o empregado '%(employee)s' com período sobreposto"
 " (%(other_from)s a %(other_to)s) à faixa %(date_from)s a %(date_to)s, na "
 "mesma estrutura salarial."
