@@ -129,3 +129,28 @@ class TestRep(PontoCommon):
         self.assertEqual(acao["res_model"], "l10n_br.hr.marcacao")
         self.assertEqual(acao["context"], {"default_rep_id": self.rep.id})
         self.assertEqual(self.env[acao["res_model"]].search(acao["domain"]), marcacao)
+
+    def test_contagem_de_marcacoes_por_rep(self):
+        """O botão do formulário mostra quantas marcações cada REP tem."""
+        outro = self.env["l10n_br.hr.rep"].create(
+            {
+                "name": "REP-C Refeitório",
+                "tipo": "rep_c",
+                "numero_fabricacao": "22222222222222222",
+                "cnpj_cpf": "12.345.678/0001-95",
+            }
+        )
+        vazio = self.env["l10n_br.hr.rep"].create(
+            {
+                "name": "REP-C Almoxarifado",
+                "tipo": "rep_c",
+                "numero_fabricacao": "33333333333333333",
+                "cnpj_cpf": "12.345.678/0001-95",
+            }
+        )
+        for nsr in (1, 2, 3):
+            self._criar_marcacao(nsr, self._utc(2026, 3, 2, 10 + nsr, 0))
+        self._criar_marcacao(1, self._utc(2026, 3, 2, 11, 0), rep_id=outro.id)
+        reps = self.rep | outro | vazio
+        reps.invalidate_recordset(["marcacao_count"])
+        self.assertEqual(reps.mapped("marcacao_count"), [3, 1, 0])

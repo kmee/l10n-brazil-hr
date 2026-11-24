@@ -172,3 +172,30 @@ class TestMarcacao(PontoCommon):
         conciliadas = marcacao._conciliar_funcionario(outro)
         self.assertFalse(conciliadas)
         self.assertEqual(marcacao.employee_id, self.employee)
+
+    def test_nome_exibido_identifica_a_marcacao(self):
+        """O nome aparece no campo de origem do tratamento e na navegação."""
+        marcacao = self._criar_marcacao(30, self._utc(2026, 3, 2, 11, 0))
+        self.assertEqual(
+            marcacao.display_name, "Maria da Silva - 2026-03-02 11:00:00 (NSR 30)"
+        )
+        pendente = self._criar_marcacao(
+            31, self._utc(2026, 3, 2, 12, 0), employee=False, cpf="12345678909"
+        )
+        self.assertEqual(
+            pendente.display_name, "12345678909 - 2026-03-02 12:00:00 (NSR 31)"
+        )
+
+    def test_busca_pelo_nome_exibido(self):
+        """Busca pelo nome (campo many2one, filtro) não pode travar."""
+        marcacao = self._criar_marcacao(32, self._utc(2026, 3, 2, 11, 0))
+        pendente = self._criar_marcacao(
+            33, self._utc(2026, 3, 2, 12, 0), employee=False, cpf="12345678909"
+        )
+        Marcacao = self.env["l10n_br.hr.marcacao"]
+        self.assertEqual(
+            Marcacao.search([("display_name", "ilike", "Maria")]), marcacao
+        )
+        self.assertEqual(
+            Marcacao.search([("display_name", "ilike", "12345678909")]), pendente
+        )

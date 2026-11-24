@@ -159,7 +159,7 @@ class L10nBrHrRep(models.Model):
         agrupado = self.env["l10n_br.hr.marcacao"]._read_group(
             [("rep_id", "in", self.ids)], ["rep_id"], ["__count"]
         )
-        contagem = {g["rep_id"][0]: g["rep_id_count"] for g in agrupado}
+        contagem = {rep.id: quantidade for rep, quantidade in agrupado}
         for rec in self:
             rec.marcacao_count = contagem.get(rec.id, 0)
 
