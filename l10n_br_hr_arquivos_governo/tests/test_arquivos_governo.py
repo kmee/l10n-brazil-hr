@@ -2,9 +2,13 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 import base64
+from datetime import date
 
 from odoo.exceptions import UserError
+from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
+
+from odoo.addons.l10n_br_hr_payroll.tests.common import PayrollCommon
 
 
 class TestDirf(TransactionCase):
@@ -89,6 +93,63 @@ class TestDirf(TransactionCase):
             conteudo,
         )
         self.assertEqual(lido.file_name, "DIRF_2020_HISTORICO.txt")
+
+
+@tagged("post_install", "-at_install")
+class TestDirfBuscarFuncionarios(PayrollCommon):
+    """A busca de funcionários da DIRF segue disponível no formulário.
+
+    Roda depois da instalação: o cálculo do holerite usa regras de outros
+    módulos da folha (SST, ressarcimento) que só estão no registro completo.
+    """
+
+    def _holerite(self, employee, contract, inicio, fim, state):
+        payslip = self._create_payslip(
+            employee, contract, date_from=inicio, date_to=fim
+        )
+        payslip.write({"state": state})
+        return payslip
+
+    def test_busca_so_holerites_fechados_do_ano_calendario(self):
+        no_ano = self._create_employee("Fechado no ano")
+        rascunho = self._create_employee("So rascunho")
+        outro_ano = self._create_employee("Fechado em outro ano")
+        contratos = {
+            employee: self._create_contract(employee, date_start=date(2023, 1, 1))
+            for employee in no_ano | rascunho | outro_ano
+        }
+        marco = (date(2024, 3, 1), date(2024, 3, 31))
+        self._holerite(no_ano, contratos[no_ano], *marco, "done")
+        self._holerite(rascunho, contratos[rascunho], *marco, "draft")
+        self._holerite(
+            outro_ano,
+            contratos[outro_ano],
+            date(2023, 12, 1),
+            date(2023, 12, 31),
+            "done",
+        )
+        dirf = self.env["l10n_br.hr.dirf"].create(
+            {
+                "company_id": self.env.company.id,
+                "ano_referencia": 2025,
+                "ano_calendario": 2024,
+            }
+        )
+        self.assertTrue(dirf.action_buscar_funcionarios())
+        self.assertIn(no_ano, dirf.employee_ids)
+        self.assertNotIn(rascunho, dirf.employee_ids)
+        self.assertNotIn(outro_ano, dirf.employee_ids)
+
+    def test_busca_ignora_outra_empresa(self):
+        employee = self._create_employee()
+        contract = self._create_contract(employee)
+        self._holerite(employee, contract, date(2024, 3, 1), date(2024, 3, 31), "done")
+        outra = self.env["res.company"].create({"name": "Outra empresa DIRF"})
+        dirf = self.env["l10n_br.hr.dirf"].create(
+            {"company_id": outra.id, "ano_referencia": 2025, "ano_calendario": 2024}
+        )
+        dirf.action_buscar_funcionarios()
+        self.assertFalse(dirf.employee_ids)
 
 
 class TestSefip(TransactionCase):

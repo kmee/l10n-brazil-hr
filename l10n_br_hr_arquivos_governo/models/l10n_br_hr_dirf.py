@@ -1,29 +1,8 @@
 # Copyright 2024 KMEE
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-import base64
-import calendar
-import io
-import unicodedata
-
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-
-
-def _normalize(text, size=0, fill=" "):
-    """Remove acentos e ajusta tamanho do campo."""
-    if not text:
-        text = ""
-    text = unicodedata.normalize("NFKD", str(text))
-    text = text.encode("ASCII", "ignore").decode("ASCII")
-    if size:
-        text = text[:size].ljust(size, fill)
-    return text
-
-
-def _format_value(value):
-    """Formata valor monetário para DIRF (centavos, sem separador)."""
-    return str(int(round(abs(value) * 100, 0))).zfill(15)
 
 
 class HrDirf(models.Model):
@@ -32,8 +11,8 @@ class HrDirf(models.Model):
     A obrigação foi extinta pela IN RFB 2.181/2024 (fatos a partir de
     01/01/2025 vão por EFD-Reinf/eSocial, com confissão e recolhimento na
     DCTFWeb). O modelo é mantido apenas para consulta do histórico já
-    gerado: a ação de geração está bloqueada e o código de montagem do
-    arquivo abaixo não é mais executado.
+    gerado: a ação de geração está bloqueada. O leiaute antigo do arquivo
+    está no histórico do git (ver readme/ROADMAP.md).
     """
 
     _name = "l10n_br.hr.dirf"
@@ -123,104 +102,6 @@ class HrDirf(models.Model):
         self.employee_ids = employees
         return True
 
-    def _get_payslips_employee(self, employee, month=None):
-        """Busca holerites de um empregado no ano calendário."""
-        domain = [
-            ("employee_id", "=", employee.id),
-            ("company_id", "=", self.company_id.id),
-            ("date_from", ">=", "%d-01-01" % self.ano_calendario),
-            ("date_from", "<=", "%d-12-31" % self.ano_calendario),
-            ("state", "in", ["done", "paid"]),
-        ]
-        if month:
-            domain.append(
-                ("date_from", ">=", "%d-%02d-01" % (self.ano_calendario, month))
-            )
-            last_day = calendar.monthrange(self.ano_calendario, month)[1]
-            domain.append(
-                (
-                    "date_from",
-                    "<=",
-                    "%d-%02d-%02d" % (self.ano_calendario, month, last_day),
-                )
-            )
-        return self.env["hr.payslip"].search(domain)
-
-    def _get_line_total(self, payslips, code):
-        """Soma o total de uma rubrica nos holerites."""
-        total = 0.0
-        for payslip in payslips:
-            for line in payslip.line_ids:
-                if line.code == code:
-                    total += line.total
-        return total
-
-    def _generate_header(self):
-        """Gera cabeçalho DIRF."""
-        lines = []
-        lines.append("DIRF|%d|%d|N||" % (self.ano_referencia, self.ano_calendario))
-        # RESPO - responsável
-        company = self.company_id
-        partner = company.partner_id
-        cpf_resp = (
-            (partner.cnpj_cpf or "").replace(".", "").replace("-", "").replace("/", "")
-        )
-        lines.append(
-            "RESPO|{}|{}|{}|{}|".format(
-                cpf_resp[:11].zfill(11),
-                _normalize(partner.name, 60),
-                "0",
-                "",
-            )
-        )
-        # DECPJ - declarante PJ
-        cnpj = (
-            (partner.cnpj_cpf or "").replace(".", "").replace("-", "").replace("/", "")
-        )
-        lines.append(
-            f"DECPJ|{cnpj[:14].zfill(14)}|{_normalize(company.name, 150)}"
-            "|0|N|N|N|N|N|N|N|0|N|N|"
-        )
-        return lines
-
-    def _generate_employee_data(self, employee):
-        """Gera dados DIRF de um empregado."""
-        lines = []
-        payslips = self._get_payslips_employee(employee)
-        if not payslips:
-            return lines
-
-        cpf = (employee.vat or "").replace(".", "").replace("-", "")
-
-        # IDREC - código de receita (0561 = empregado CLT)
-        lines.append("IDREC|0561|")
-
-        # BPFDEC - beneficiário pessoa física
-        lines.append(
-            f"BPFDEC|{cpf[:11].zfill(11)}|{_normalize(employee.name, 60)}"
-            "|N|N|N|N|N|N|N|N|"
-        )
-
-        # RTRT - Rendimentos tributáveis por mês
-        for month in range(1, 13):
-            month_payslips = self._get_payslips_employee(employee, month)
-            rendimento = self._get_line_total(month_payslips, "BRUTO")
-            lines.append(f"RTRT|{_format_value(rendimento)}|")
-
-        # RTPO - Previdência oficial por mês
-        for month in range(1, 13):
-            month_payslips = self._get_payslips_employee(employee, month)
-            inss = self._get_line_total(month_payslips, "INSS")
-            lines.append(f"RTPO|{_format_value(inss)}|")
-
-        # RTDP - IR retido por mês
-        for month in range(1, 13):
-            month_payslips = self._get_payslips_employee(employee, month)
-            irrf = self._get_line_total(month_payslips, "IRRF")
-            lines.append(f"RTDP|{_format_value(irrf)}|")
-
-        return lines
-
     def action_gerar_dirf(self):
         """Bloqueado: a DIRF foi extinta (ver docstring da classe)."""
         raise UserError(
@@ -238,40 +119,3 @@ class HrDirf(models.Model):
                 "somente para consulta de histórico."
             )
         )
-
-    def _gerar_dirf_descontinuado(self):
-        """Código morto mantido como referência do leiaute antigo da DIRF.
-
-        Não é chamado por nenhuma ação: a geração está bloqueada em
-        :meth:`action_gerar_dirf`.
-        """
-        self.ensure_one()
-        if not self.employee_ids:
-            raise UserError(_("Busque os funcionários antes de gerar a DIRF."))
-
-        lines = self._generate_header()
-        for employee in self.employee_ids:
-            lines.extend(self._generate_employee_data(employee))
-
-        lines.append("FIMDirf|")
-        content = "\r\n".join(lines)
-
-        buf = io.BytesIO()
-        buf.write(content.encode("ascii", "ignore"))
-
-        self.write(
-            {
-                "file_content": content,
-                "file_binary": base64.b64encode(buf.getvalue()),
-                "file_name": "DIRF_%d_%s.txt"
-                % (
-                    self.ano_referencia,
-                    (self.company_id.partner_id.cnpj_cpf or "")
-                    .replace(".", "")
-                    .replace("-", "")
-                    .replace("/", ""),
-                ),
-                "state": "open",
-            }
-        )
-        return True
