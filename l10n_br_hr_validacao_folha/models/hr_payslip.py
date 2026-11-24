@@ -23,8 +23,6 @@ class HrPayslip(models.Model):
         for rec in self:
             if rec.state == "cancel":
                 continue
-            if not rec.date_from or not rec.date_to:
-                continue
             domain = [
                 ("employee_id", "=", rec.employee_id.id),
                 ("struct_id", "=", rec.struct_id.id),
@@ -45,20 +43,6 @@ class HrPayslip(models.Model):
                         employee=rec.employee_id.name,
                         other_from=other.date_from,
                         other_to=other.date_to,
-                        date_from=rec.date_from,
-                        date_to=rec.date_to,
-                    )
-                )
-
-    @api.constrains("date_from", "date_to")
-    def _check_payslip_dates(self):
-        """Validate payslip date range."""
-        for rec in self:
-            if rec.date_from and rec.date_to and rec.date_from > rec.date_to:
-                raise ValidationError(
-                    _(
-                        "A data inicial (%(date_from)s) não pode ser "
-                        "posterior à data final (%(date_to)s).",
                         date_from=rec.date_from,
                         date_to=rec.date_to,
                     )
