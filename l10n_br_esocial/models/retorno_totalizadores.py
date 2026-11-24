@@ -253,14 +253,12 @@ def _parse_s5011(evt, totalizador):
         _linhas_bases_lotacao(ide_estab, totalizador, tp_insc, nr_insc)
 
 
-def _parse_cr_irrf(evt, totalizador, per_ref=None):
-    """Grupos de código de receita do IRRF (S-5002 e S-5012)."""
+def _parse_cr_irrf(evt, totalizador):
+    """S-5012: IRRF consolidado por código de receita (infoCRMen, infoCRDia)."""
     for elemento in evt.iter():
         grupo, campo_codigo = {
             "infoCRMen": ("cr_men", "CRMen"),
             "infoCRDia": ("cr_dia", "CRDia"),
-            "consolidApurMen": ("cr_men", "CRMen"),
-            "consolidApurDia": ("cr_dia", "CRDia"),
         }.get(_nome(elemento), (None, None))
         if not grupo:
             continue
@@ -272,38 +270,52 @@ def _parse_cr_irrf(evt, totalizador, per_ref=None):
                     codigo=codigo,
                     descricao=nome,
                     valor=valor,
-                    per_ref=per_ref,
+                )
+            )
+
+
+def _linhas_irrf_s5002(pai, grupos, totalizador, **contexto):
+    """Totais por código de receita dos filhos diretos de ``pai``."""
+    for elemento in pai:
+        grupo, campo_codigo = grupos.get(_nome(elemento), (None, None))
+        if not grupo:
+            continue
+        codigo = _texto(elemento, campo_codigo)
+        for nome, valor in _valores_do_grupo(elemento):
+            totalizador.linhas.append(
+                LinhaTotalizador(
+                    grupo=grupo,
+                    codigo=codigo,
+                    descricao=nome,
+                    valor=valor,
+                    **contexto,
                 )
             )
 
 
 def _parse_s5002(evt, totalizador):
-    """S-5002: IRRF por beneficiário.
+    """S-5002: IRRF por beneficiário (leiaute S-1.3, evtIrrfBenef).
 
-    O evento traz o consolidado do beneficiário e, separadamente, o detalhe por
-    demonstrativo de pagamento. Somar os dois contaria o imposto duas vezes, por
-    isso o detalhe carrega ``per_ref`` e o consolidado não.
+    O CPF vem em ``ideTrabalhador/cpfBenef``. O evento traz o detalhe por
+    demonstrativo (``dmDev``, com ``perRef`` e os totais ``totApurMen`` e
+    ``totApurDia``) e o consolidado do beneficiário (``totInfoIR``, com
+    ``consolidApurMen``). Somar os dois contaria o imposto duas vezes, por isso
+    o detalhe carrega ``per_ref`` e o consolidado não.
     """
+    totalizador.cpf_trab = _texto(evt, "cpfBenef")
     for elemento in evt.iter():
-        if _nome(elemento) == "basesIrrf":
-            continue
-        if _nome(elemento) in ("infoIRRF", "idePgtoBenef"):
-            per_ref = _texto(elemento, "perRef")
-            if per_ref:
-                _parse_cr_irrf(elemento, totalizador, per_ref=per_ref)
-    for elemento in evt.iter():
-        if _nome(elemento) in ("consolidApurMen", "consolidApurDia"):
-            codigo = _texto(elemento, "CRMen") or _texto(elemento, "CRDia")
-            grupo = "cr_men" if _nome(elemento) == "consolidApurMen" else "cr_dia"
-            for nome, valor in _valores_do_grupo(elemento):
-                totalizador.linhas.append(
-                    LinhaTotalizador(
-                        grupo=grupo,
-                        codigo=codigo,
-                        descricao=nome,
-                        valor=valor,
-                    )
-                )
+        if _nome(elemento) == "dmDev":
+            _linhas_irrf_s5002(
+                elemento,
+                {"totApurMen": ("cr_men", "CRMen"), "totApurDia": ("cr_dia", "CRDia")},
+                totalizador,
+                per_ref=_texto(elemento, "perRef"),
+                cod_categ=_texto(elemento, "codCateg"),
+            )
+        elif _nome(elemento) == "totInfoIR":
+            _linhas_irrf_s5002(
+                elemento, {"consolidApurMen": ("cr_men", "CRMen")}, totalizador
+            )
 
 
 def _parse_evento(evt, tipo):

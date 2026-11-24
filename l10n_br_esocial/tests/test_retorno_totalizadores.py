@@ -129,12 +129,55 @@ class TestRetornoTotalizadores(ESocialCicloCommon):
         self.assertEqual(totalizador.nr_rec_arq_base, RECIBO_S1210)
         self.assertEqual(set(totalizador.linha_ids.mapped("grupo")), {"cr_men"})
         self.assertEqual(set(totalizador.linha_ids.mapped("codigo")), {"056107"})
-        irrf = self._linha(totalizador, "cr_men", "vlrCRMen")
+        # O detalhe por demonstrativo carrega per_ref; o consolidado não.
+        irrf = self._linha(totalizador, "cr_men", "vlrCRMen").filtered(
+            lambda linha: not linha.per_ref
+        )
         self.assertEqual(len(irrf), 1)
         self.assertAlmostEqual(irrf.valor, 85.2, places=2)
-        self.assertFalse(irrf.per_ref)
-        rend = self._linha(totalizador, "cr_men", "vlrRendTrib")
+        rend = self._linha(totalizador, "cr_men", "vlrRendTrib").filtered(
+            lambda linha: not linha.per_ref
+        )
         self.assertAlmostEqual(rend.valor, 3000.0, places=2)
+
+    def test_s5002_identifica_o_beneficiario_e_le_o_detalhe(self):
+        """S-1.3: CPF em ideTrabalhador/cpfBenef e detalhe em dmDev.
+
+        Cada demonstrativo (dmDev) traz perRef e os totais por código de
+        receita em totApurMen (CRMen) e totApurDia (CRDia, residente no
+        exterior), conforme o binding evt_irrf_benef da esociallib.
+        """
+        retorno = retorno_s5002(self.cpf_employee).replace(
+            "</totApurMen>",
+            "</totApurMen>"
+            "<totApurDia><perApurDia>05</perApurDia><CRDia>047301</CRDia>"
+            "<frmTribut>10</frmTribut><paisResidExt>105</paisResidExt>"
+            "<vlrPagoDia>500.00</vlrPagoDia><vlrCRDia>125.00</vlrCRDia>"
+            "</totApurDia>",
+        )
+        evento = self._totalizadores("S-1210", retorno)
+        totalizador = evento.totalizador_ids
+        self.assertEqual(totalizador.cpf_trab, self.cpf_employee)
+        self.assertEqual(totalizador.employee_id, self.employee)
+        self.assertEqual(totalizador.name, f"S-5002 2024-03 {self.cpf_employee}")
+
+        detalhe = totalizador.linha_ids.filtered("per_ref")
+        self.assertEqual(set(detalhe.mapped("per_ref")), {"2024-03"})
+        self.assertEqual(set(detalhe.mapped("cod_categ")), {"101"})
+        mensal = detalhe.filtered(lambda linha: linha.grupo == "cr_men")
+        self.assertEqual(set(mensal.mapped("codigo")), {"056107"})
+        self.assertEqual(
+            sorted(mensal.mapped("descricao")),
+            ["vlrCRMen", "vlrPrevOficial", "vlrRendTrib"],
+        )
+        irrf = mensal.filtered(lambda linha: linha.descricao == "vlrCRMen")
+        self.assertAlmostEqual(irrf.valor, 85.2, places=2)
+        diario = detalhe.filtered(lambda linha: linha.grupo == "cr_dia")
+        self.assertEqual(set(diario.mapped("codigo")), {"047301"})
+        self.assertEqual(
+            {linha.descricao: linha.valor for linha in diario},
+            {"vlrPagoDia": 500.0, "vlrCRDia": 125.0},
+        )
 
     def test_s5011_por_estabelecimento_e_13(self):
         evento = self._totalizadores(
