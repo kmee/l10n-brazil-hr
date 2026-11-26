@@ -46,6 +46,16 @@ class ESocialS2200(models.Model):
         )
         return level.code if level else "07"
 
+    def _get_raca_cor(self, employee):
+        """Raça/cor (tabela do campo racaCor do eSocial, 1 a 5).
+
+        Os códigos de ``hr.ethnicity`` (l10n_br_hr) são os do eSocial. O
+        código 6 (não informado) não é aceito em admissões desde 2024-04-22,
+        então, sem raça/cor informada, mantém-se o padrão 1 (branca).
+        """
+        code = employee.ethnicity.code if "ethnicity" in employee._fields else False
+        return int(code) if code in ("1", "2", "3", "4", "5") else 1
+
     def _to_esociallib_dict(self):
         self.ensure_one()
         employee = self.employee_id
@@ -89,7 +99,7 @@ class ESocialS2200(models.Model):
             "cpf_trab": cpf_limpo,
             "nm_trab": employee.name,
             "sexo": sexo,
-            "raca_cor": 1,  # Default: branca
+            "raca_cor": self._get_raca_cor(employee),
             "grau_instr": self._get_grau_instr(employee),
             "dt_nascto": str(employee.birthday) if employee.birthday else "1990-01-01",
             "matricula": matricula,

@@ -221,6 +221,21 @@ class TestS2200(TestESocialIntermediarioBase):
             )
             self.assertEqual(s2200._to_esociallib_dict()["grau_instr"], "09")
 
+    def test_s2200_raca_cor(self):
+        """Sem raça/cor vale 1; com raça/cor, o código do cadastro."""
+        s2200 = self.env["l10n_br.esocial.s2200"].create(
+            {
+                "employee_id": self.employee.id,
+                "contract_id": self.contract.id,
+                "company_id": self.company.id,
+            }
+        )
+        self.assertEqual(s2200._to_esociallib_dict()["raca_cor"], 1)
+        self.employee.ethnicity = self.env.ref("l10n_br_hr.ethnicity_3")
+        self.assertEqual(s2200._to_esociallib_dict()["raca_cor"], 3)
+        self.employee.ethnicity = self.env.ref("l10n_br_hr.ethnicity_6")
+        self.assertEqual(s2200._to_esociallib_dict()["raca_cor"], 1)
+
     def test_s2200_requires_cpf(self):
         """Deve dar erro se empregado não tem CPF."""
         emp = self.env["hr.employee"].create(
