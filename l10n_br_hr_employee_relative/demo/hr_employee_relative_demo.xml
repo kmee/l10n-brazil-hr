@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Dependentes dos funcionários da demonstração do l10n_br_hr -->
+    <record id="demo_relative_larissa" model="hr.employee.relative">
+        <field name="employee_id" ref="l10n_br_hr.demo_employee_joao" />
+        <field name="relation_id" ref="hr_employee_relative.relation_child" />
+        <field name="name">Larissa Oliveira da Silva</field>
+        <field name="gender">female</field>
+        <field name="date_of_birth">2016-08-21</field>
+        <field name="l10n_br_irrf_dependent" eval="True" />
+        <field name="l10n_br_family_allowance" eval="True" />
+        <field name="l10n_br_health_plan" eval="True" />
+    </record>
+    <record id="demo_relative_marcos" model="hr.employee.relative">
+        <field name="employee_id" ref="l10n_br_hr.demo_employee_joao" />
+        <field name="relation_id" ref="hr_employee_relative.relation_child" />
+        <field name="name">Marcos Vinícius da Silva</field>
+        <field name="gender">male</field>
+        <field name="date_of_birth">2012-02-03</field>
+        <field name="l10n_br_irrf_dependent" eval="True" />
+        <field name="l10n_br_family_allowance" eval="True" />
+        <field name="l10n_br_health_plan" eval="True" />
+    </record>
+    <record id="demo_relative_beatriz" model="hr.employee.relative">
+        <field name="employee_id" ref="l10n_br_hr.demo_employee_maria" />
+        <field name="relation_id" ref="hr_employee_relative.relation_child" />
+        <field name="name">Beatriz Santos Almeida</field>
+        <field name="gender">female</field>
+        <field name="date_of_birth">2019-11-12</field>
+        <field name="l10n_br_irrf_dependent" eval="True" />
+        <field name="l10n_br_alimony" eval="True" />
+        <field name="l10n_br_provision_amount">650.00</field>
+    </record>
+    <record id="demo_relative_helena" model="hr.employee.relative">
+        <field name="employee_id" ref="l10n_br_hr.demo_employee_pedro" />
+        <field name="relation_id" ref="hr_employee_relative.relation_child" />
+        <field name="name">Helena Oliveira Duarte</field>
+        <field name="gender">female</field>
+        <field name="date_of_birth">2008-05-30</field>
+        <field name="l10n_br_irrf_dependent" eval="True" />
+        <field name="l10n_br_family_allowance" eval="True" />
+        <field name="l10n_br_incapable_of_work" eval="True" />
+    </record>
+</odoo>
