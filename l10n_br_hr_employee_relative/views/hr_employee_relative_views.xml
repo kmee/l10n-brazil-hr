@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="hr_employee_relative_view_list" model="ir.ui.view">
+        <field name="name">hr.employee.relative.view.list.l10n_br</field>
+        <field name="model">hr.employee.relative</field>
+        <field
+            name="inherit_id"
+            ref="hr_employee_relative.hr_employee_relative_view_tree"
+        />
+        <field name="arch" type="xml">
+            <field name="date_of_birth" position="after">
+                <field name="l10n_br_irrf_dependent" optional="show" />
+                <field name="l10n_br_family_allowance" optional="show" />
+                <field name="l10n_br_alimony" optional="show" />
+                <field name="l10n_br_incapable_of_work" optional="hide" />
+                <field name="l10n_br_health_plan" optional="hide" />
+                <field name="currency_id" column_invisible="1" />
+                <field name="l10n_br_provision_amount" optional="hide" />
+                <field
+                    name="l10n_br_incapacity_proof"
+                    filename="l10n_br_incapacity_proof_name"
+                    optional="hide"
+                />
+                <field name="l10n_br_incapacity_proof_name" column_invisible="1" />
+                <field
+                    name="l10n_br_document"
+                    filename="l10n_br_document_name"
+                    optional="hide"
+                />
+                <field name="l10n_br_document_name" column_invisible="1" />
+            </field>
+        </field>
+    </record>
+</odoo>
