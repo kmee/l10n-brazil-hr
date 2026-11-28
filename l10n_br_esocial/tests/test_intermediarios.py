@@ -205,6 +205,22 @@ class TestS2200(TestESocialIntermediarioBase):
         self.assertEqual(data["vr_sal_fx"], "5000.0")
         self.assertEqual(data["dt_adm"], "2024-01-02")
 
+    def test_s2200_grau_instr(self):
+        """Sem grau informado vale 07 (médio completo); com grau, o do cadastro."""
+        s2200 = self.env["l10n_br.esocial.s2200"].create(
+            {
+                "employee_id": self.employee.id,
+                "contract_id": self.contract.id,
+                "company_id": self.company.id,
+            }
+        )
+        self.assertEqual(s2200._to_esociallib_dict()["grau_instr"], "07")
+        if "education_level_id" in self.employee._fields:
+            self.employee.education_level_id = self.env.ref(
+                "l10n_br_hr.education_level_09"
+            )
+            self.assertEqual(s2200._to_esociallib_dict()["grau_instr"], "09")
+
     def test_s2200_requires_cpf(self):
         """Deve dar erro se empregado não tem CPF."""
         emp = self.env["hr.employee"].create(
